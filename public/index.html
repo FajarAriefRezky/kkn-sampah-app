@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Peta Titik TPS</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>🗺️ Peta Titik TPS</h1>
+      <p id="desaName">Memuat data desa...</p>
+    </div>
+    <div class="stats" id="stats">
+      <div class="stat-card"><span id="statTotal">0</span><small>Total Laporan</small></div>
+      <div class="stat-card belum"><span id="statBelum">0</span><small>Belum Ditangani</small></div>
+      <div class="stat-card proses"><span id="statProses">0</span><small>Sedang Ditindaklanjuti</small></div>
+      <div class="stat-card selesai"><span id="statSelesai">0</span><small>Selesai</small></div>
+    </div>
+  </header>
+
+  <main>
+    <div id="map"></div>
+    <aside id="sidebar">
+      <section class="panel">
+        <h2>Form Laporan Warga</h2>
+        <form id="reportForm" class="report-form" enctype="multipart/form-data">
+          <label>Nama</label>
+          <input type="text" id="nama" name="nama" required />
+
+          <label>Nomor WA</label>
+          <input type="text" id="nomorWa" name="nomorWa" placeholder="Contoh: 628123456789" required />
+
+          <label>Deskripsi</label>
+          <textarea id="deskripsi" name="deskripsi" rows="3" required></textarea>
+
+          <div class="location-actions">
+            <button type="button" id="useMyLocationBtn">Gunakan lokasi saya</button>
+            <button type="button" id="pickLocationBtn">Pilih lokasi di peta</button>
+          </div>
+
+          <label>Koordinat lokasi (garis lintang)</label>
+          <input type="text" id="latitude" name="latitude" placeholder="Contoh: -6.4001" required />
+
+          <label>Koordinat lokasi (garis bujur)</label>
+          <input type="text" id="longitude" name="longitude" placeholder="Contoh: 107.4438" required />
+          <small class="field-hint">Kalau belum tahu, tekan tombol di atas untuk pakai lokasi Anda atau pilih titik di peta.</small>
+
+          <label>Foto (opsional)</label>
+          <input type="file" id="foto" name="foto" accept="image/*" />
+
+          <button type="submit">Kirim Laporan</button>
+          <p id="formMessage" class="form-message"></p>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Daftar Laporan Terbaru</h2>
+        <div id="reportList"></div>
+      </section>
+    </aside>
+  </main>
+
+  <footer>
+    Sistem Informasi Digital Pengelolaan Sampah Desa — Chatbot WhatsApp &amp; Peta Digital &middot;
+    KKN 2026 &middot; Nama: Fajar Arief Rezky | NIM: 23416255201230 | Kelas: IF23E
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

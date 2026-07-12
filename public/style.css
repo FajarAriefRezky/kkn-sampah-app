@@ -1,0 +1,263 @@
+:root {
+  --green: #2E7D32;
+  --green-light: #E8F5E9;
+  --orange: #F57C00;
+  --red: #C62828;
+  --gray: #555;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color: #222;
+  background: #f5f7f5;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--green);
+  color: white;
+  padding: 16px 24px;
+}
+
+.topbar h1 {
+  margin: 0 0 4px 0;
+  font-size: 1.3rem;
+}
+
+.topbar p {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 8px 14px;
+  text-align: center;
+  min-width: 90px;
+}
+
+.stat-card span {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.stat-card small {
+  font-size: 0.7rem;
+  opacity: 0.9;
+}
+
+.stat-card.belum { background: rgba(198,40,40,0.35); }
+.stat-card.proses { background: rgba(245,124,0,0.35); }
+.stat-card.selesai { background: rgba(46,125,50,0.5); }
+
+main {
+  display: flex;
+  height: calc(100vh - 90px);
+}
+
+#map {
+  flex: 1;
+  height: 100%;
+}
+
+#sidebar {
+  width: 320px;
+  background: white;
+  border-left: 1px solid #ddd;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+#sidebar h2 {
+  font-size: 1rem;
+  margin-top: 0;
+  color: var(--green);
+}
+
+.panel {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 12px;
+  background: #fafdfa;
+}
+
+.report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-form label {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  color: #666;
+  margin-top: -2px;
+}
+
+.location-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.location-actions button {
+  flex: 1;
+  padding: 7px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #f1f8e9;
+  cursor: pointer;
+}
+
+.report-form input,
+.report-form textarea,
+.report-form button {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font: inherit;
+}
+
+.report-form button {
+  background: var(--green);
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.form-message {
+  min-height: 1.2rem;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.report-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+}
+
+.report-item img {
+  width: 100%;
+  border-radius: 6px;
+  margin-top: 6px;
+}
+
+.report-actions {
+  margin-top: 6px;
+}
+
+.delete-btn {
+  padding: 6px 8px;
+  border: 1px solid #c62828;
+  border-radius: 6px;
+  background: #ffebee;
+  color: #c62828;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  color: white;
+  margin-top: 4px;
+}
+
+.badge.belum { background: var(--red); }
+.badge.proses { background: var(--orange); }
+.badge.selesai { background: var(--green); }
+
+select.status-select {
+  margin-top: 6px;
+  width: 100%;
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--gray);
+  padding: 8px;
+  background: #eee;
+}
+
+@media (max-width: 900px) {
+  main {
+    flex-direction: column;
+    height: auto;
+  }
+
+  #map {
+    height: 60vh;
+    min-height: 320px;
+  }
+
+  #sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #ddd;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    padding: 12px 14px;
+  }
+
+  .topbar h1 {
+    font-size: 1.05rem;
+  }
+
+  .stats {
+    width: 100%;
+  }
+
+  .stat-card {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+  }
+
+  .location-actions {
+    flex-direction: column;
+  }
+
+  .location-actions button {
+    width: 100%;
+  }
+
+  .report-form input,
+  .report-form textarea,
+  .report-form button {
+    font-size: 16px;
+  }
+}

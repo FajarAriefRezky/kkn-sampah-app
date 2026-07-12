@@ -1,0 +1,24 @@
+{
+  "name": "kkn-sampah-app",
+  "version": "1.0.0",
+  "description": "Sistem Informasi Digital Pengelolaan Sampah Desa - Chatbot WhatsApp + Peta Digital (KKN 2026 - Fajar Arief Rezky, 23416255201230, IF23E)",
+  "main": "src/server.js",
+  "scripts": {
+    "bot": "node src/bot.js",
+    "server": "node src/server.js",
+    "start": "node src/server.js",
+    "tunnel": "\"C:\\Program Files (x86)\\cloudflared\\cloudflared.exe\" tunnel --url http://localhost:3001",
+    "tunnel:localtunnel": "npx --yes localtunnel --port 3001 --subdomain petatitiktpskkn2026",
+    "tunnel:random": "npx --yes localtunnel --port 3001"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "github:wwebjs/whatsapp-web.js#main",
+    "qrcode-terminal": "^0.12.0",
+    "googleapis": "^140.0.1",
+    "express": "^4.19.2",
+    "multer": "^2.0.1",
+    "dotenv": "^16.4.5",
+    "cors": "^2.8.5",
+    "selfsigned": "^2.0.0"
+  }
+}
