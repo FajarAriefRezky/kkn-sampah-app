@@ -100,6 +100,15 @@ Tambahkan variabel berikut di Railway:
 - `CLOUDINARY_API_SECRET`
 - `CLOUDINARY_FOLDER` (opsional, contoh: `kkn-sampah`)
 
+### Hak akses admin dashboard
+Secara default, warga hanya bisa melihat daftar laporan terbaru. Mengubah status dan menghapus laporan hanya bisa dilakukan oleh admin yang login.
+
+Tambahkan variabel berikut di server atau Railway:
+- `ADMIN_PASSWORD` = password admin dashboard
+- `ADMIN_SESSION_SECRET` = string acak panjang untuk menandatangani sesi admin
+
+Jika dua variabel ini belum diisi, tombol login admin akan tampil sebagai belum dikonfigurasi dan endpoint edit/hapus otomatis ditolak server.
+
 ### Custom domain Railway (URL resmi desa)
 1. Buka service Railway kamu > tab **Domains**.
 2. Pilih **Custom Domain** lalu masukkan domain/subdomain (contoh: `lapor-sampah.desakamu.id`).

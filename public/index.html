@@ -58,6 +58,22 @@
 
       <section class="panel">
         <h2>Daftar Laporan Terbaru</h2>
+        <div class="admin-panel" id="adminPanel">
+          <div class="admin-panel-header">
+            <strong>Akses Admin</strong>
+            <span id="adminStatusText">Mode warga aktif</span>
+          </div>
+          <form id="adminLoginForm" class="admin-login-form">
+            <label for="adminPassword">Password admin</label>
+            <input type="password" id="adminPassword" name="adminPassword" placeholder="Masukkan password admin" autocomplete="current-password" />
+            <button type="submit">Masuk sebagai admin</button>
+          </form>
+          <div id="adminActions" class="admin-actions hidden">
+            <p class="admin-note">Mode admin aktif. Anda bisa mengubah status dan menghapus laporan.</p>
+            <button type="button" id="adminLogoutBtn" class="secondary-btn">Keluar dari admin</button>
+          </div>
+          <p id="adminMessage" class="admin-message"></p>
+        </div>
         <div id="reportList"></div>
       </section>
     </aside>

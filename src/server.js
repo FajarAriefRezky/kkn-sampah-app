@@ -22,6 +22,8 @@ const PORT = Number(process.env.PORT) || 3000;
 const HTTP_PORT = Number(process.env.HTTP_PORT) || 3001;
 const HOST = process.env.HOST || "0.0.0.0";
 const HTTPS_HOST = process.env.HTTPS_HOST || "PetaTitikTPS";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || "";
 const IS_CLOUD_ENV = Boolean(
   process.env.RAILWAY_ENVIRONMENT ||
     process.env.RENDER ||
@@ -50,6 +52,78 @@ if (USE_CLOUDINARY) {
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
+}
+
+function parseCookies(cookieHeader = "") {
+  return cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .reduce((acc, part) => {
+      const separatorIndex = part.indexOf("=");
+      if (separatorIndex === -1) return acc;
+
+      const key = part.slice(0, separatorIndex);
+      const value = part.slice(separatorIndex + 1);
+      acc[key] = decodeURIComponent(value);
+      return acc;
+    }, {});
+}
+
+function createAdminSessionToken() {
+  if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) return "";
+
+  return crypto
+    .createHmac("sha256", ADMIN_SESSION_SECRET)
+    .update(ADMIN_PASSWORD)
+    .digest("hex");
+}
+
+function isAdminAuthenticated(req) {
+  if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) return false;
+
+  const cookies = parseCookies(req.headers.cookie || "");
+  return cookies.admin_session === createAdminSessionToken();
+}
+
+function setAdminSessionCookie(res) {
+  const secure = RUN_LOCAL_HTTPS || IS_CLOUD_ENV;
+  const cookieParts = [
+    `admin_session=${encodeURIComponent(createAdminSessionToken())}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    `Max-Age=${60 * 60 * 12}`,
+  ];
+
+  if (secure) {
+    cookieParts.push("Secure");
+  }
+
+  res.setHeader("Set-Cookie", cookieParts.join("; "));
+}
+
+function clearAdminSessionCookie(res) {
+  const secure = RUN_LOCAL_HTTPS || IS_CLOUD_ENV;
+  const cookieParts = ["admin_session=", "Path=/", "HttpOnly", "SameSite=Lax", "Max-Age=0"];
+
+  if (secure) {
+    cookieParts.push("Secure");
+  }
+
+  res.setHeader("Set-Cookie", cookieParts.join("; "));
+}
+
+function requireAdmin(req, res, next) {
+  if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
+    return res.status(503).json({ ok: false, message: "Akses admin belum dikonfigurasi di server." });
+  }
+
+  if (!isAdminAuthenticated(req)) {
+    return res.status(403).json({ ok: false, message: "Hanya admin yang dapat mengelola laporan." });
+  }
+
+  return next();
 }
 
 function getLocalIp() {
@@ -100,6 +174,30 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.resolve(__dirname, "..", "public")));
 app.use("/uploads", express.static(UPLOAD_DIR));
 
+app.get("/api/admin/session", (req, res) => {
+  const enabled = Boolean(ADMIN_PASSWORD && ADMIN_SESSION_SECRET);
+  res.json({ ok: true, enabled, authenticated: enabled ? isAdminAuthenticated(req) : false });
+});
+
+app.post("/api/admin/login", (req, res) => {
+  if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
+    return res.status(503).json({ ok: false, message: "Akses admin belum dikonfigurasi di server." });
+  }
+
+  const password = String(req.body?.password || "");
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ ok: false, message: "Password admin salah." });
+  }
+
+  setAdminSessionCookie(res);
+  return res.json({ ok: true, message: "Login admin berhasil." });
+});
+
+app.post("/api/admin/logout", (req, res) => {
+  clearAdminSessionCookie(res);
+  res.json({ ok: true, message: "Logout admin berhasil." });
+});
+
 // Ambil semua laporan untuk ditampilkan di peta
 app.get("/api/reports", async (req, res) => {
   try {
@@ -143,7 +241,7 @@ app.post("/api/reports", upload.single("foto"), async (req, res) => {
 });
 
 // Update status laporan (klik marker di peta -> tandai selesai/proses)
-app.post("/api/reports/:rowNumber/status", async (req, res) => {
+app.post("/api/reports/:rowNumber/status", requireAdmin, async (req, res) => {
   try {
     const { rowNumber } = req.params;
     const { status } = req.body;
@@ -160,7 +258,7 @@ app.post("/api/reports/:rowNumber/status", async (req, res) => {
 });
 
 // Hapus laporan (soft delete)
-app.post("/api/reports/:rowNumber/delete", async (req, res) => {
+app.post("/api/reports/:rowNumber/delete", requireAdmin, async (req, res) => {
   try {
     const { rowNumber } = req.params;
     await deleteReport(parseInt(rowNumber, 10));

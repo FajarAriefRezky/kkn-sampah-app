@@ -154,6 +154,73 @@ main {
   margin: 0;
 }
 
+.admin-panel {
+  border: 1px solid #dbe7dc;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 12px;
+  background: linear-gradient(180deg, #f6fbf6 0%, #eef7ef 100%);
+}
+
+.admin-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+}
+
+.admin-login-form,
+.admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-login-form label,
+.admin-note,
+.admin-message {
+  font-size: 0.78rem;
+}
+
+.admin-login-form input,
+.admin-login-form button,
+.secondary-btn {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #c8d7c9;
+  font: inherit;
+}
+
+.admin-login-form button {
+  background: #1f5f2b;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.secondary-btn {
+  background: #fff;
+  color: #1f5f2b;
+  cursor: pointer;
+}
+
+.admin-note {
+  margin: 0;
+  color: #255d2e;
+}
+
+.admin-message {
+  min-height: 1rem;
+  margin: 0;
+  color: #666;
+}
+
+.hidden {
+  display: none !important;
+}
+
 .report-item {
   border: 1px solid #e0e0e0;
   border-radius: 8px;

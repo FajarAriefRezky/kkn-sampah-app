@@ -14,6 +14,11 @@ const STATUS_CLASS = {
   "Selesai Ditangani": "selesai",
 };
 
+const ADMIN_STATE = {
+  authenticated: false,
+  enabled: false,
+};
+
 let map;
 let markers = [];
 let locationPickerMarker = null;
@@ -84,12 +89,70 @@ function reporterIcon(color) {
   });
 }
 
+function setAdminMessage(message, isError = false) {
+  const el = document.getElementById("adminMessage");
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = isError ? "#C62828" : "#255d2e";
+}
+
+function updateAdminUi() {
+  const statusText = document.getElementById("adminStatusText");
+  const loginForm = document.getElementById("adminLoginForm");
+  const actions = document.getElementById("adminActions");
+
+  if (statusText) {
+    if (!ADMIN_STATE.enabled) {
+      statusText.textContent = "Admin belum dikonfigurasi";
+    } else {
+      statusText.textContent = ADMIN_STATE.authenticated ? "Mode admin aktif" : "Mode warga aktif";
+    }
+  }
+
+  if (loginForm) {
+    loginForm.classList.toggle("hidden", !ADMIN_STATE.enabled || ADMIN_STATE.authenticated);
+  }
+
+  if (actions) {
+    actions.classList.toggle("hidden", !ADMIN_STATE.enabled || !ADMIN_STATE.authenticated);
+  }
+}
+
+async function fetchAdminSession() {
+  try {
+    const res = await fetch("/api/admin/session", { credentials: "same-origin" });
+    const json = await res.json();
+    ADMIN_STATE.authenticated = Boolean(json.authenticated);
+    ADMIN_STATE.enabled = Boolean(json.enabled);
+    updateAdminUi();
+  } catch (err) {
+    console.error(err);
+    ADMIN_STATE.authenticated = false;
+    ADMIN_STATE.enabled = false;
+    updateAdminUi();
+  }
+}
+
 async function updateStatus(rowNumber, status) {
-  await fetch(`/api/reports/${rowNumber}/status`, {
+  const res = await fetch(`/api/reports/${rowNumber}/status`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
     body: JSON.stringify({ status }),
   });
+
+  const json = await res.json();
+  if (!res.ok || !json.ok) {
+    setAdminMessage(json.message || "Hanya admin yang bisa mengubah status.", true);
+    if (res.status === 401 || res.status === 403) {
+      ADMIN_STATE.authenticated = false;
+      updateAdminUi();
+    }
+    loadReports();
+    return;
+  }
+
+  setAdminMessage("Status laporan berhasil diperbarui.");
   loadReports();
 }
 
@@ -104,18 +167,82 @@ async function deleteReport(rowNumber) {
   if (!confirmed) return;
 
   try {
-    const res = await fetch(`/api/reports/${rowNumber}/delete`, { method: "POST" });
+    const res = await fetch(`/api/reports/${rowNumber}/delete`, {
+      method: "POST",
+      credentials: "same-origin",
+    });
     const json = await res.json();
     if (!res.ok || !json.ok) {
-      showFormMessage(json.message || "Gagal menghapus laporan.", true);
+      setAdminMessage(json.message || "Hanya admin yang bisa menghapus laporan.", true);
+      if (res.status === 401 || res.status === 403) {
+        ADMIN_STATE.authenticated = false;
+        updateAdminUi();
+      }
       return;
     }
-    showFormMessage("Laporan berhasil dihapus.");
+    setAdminMessage("Laporan berhasil dihapus.");
     loadReports();
   } catch (err) {
     console.error(err);
-    showFormMessage("Gagal menghapus laporan.", true);
+    setAdminMessage("Gagal menghapus laporan.", true);
   }
+}
+
+function bindAdminPanel() {
+  const loginForm = document.getElementById("adminLoginForm");
+  const logoutBtn = document.getElementById("adminLogoutBtn");
+
+  loginForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const passwordInput = document.getElementById("adminPassword");
+    const password = passwordInput?.value || "";
+
+    if (!password.trim()) {
+      setAdminMessage("Password admin wajib diisi.", true);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ password }),
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json.ok) {
+        setAdminMessage(json.message || "Login admin gagal.", true);
+        return;
+      }
+
+      ADMIN_STATE.authenticated = true;
+      ADMIN_STATE.enabled = true;
+      updateAdminUi();
+      passwordInput.value = "";
+      setAdminMessage("Login admin berhasil.");
+      loadReports();
+    } catch (err) {
+      console.error(err);
+      setAdminMessage("Gagal login admin.", true);
+    }
+  });
+
+  logoutBtn?.addEventListener("click", async () => {
+    try {
+      await fetch("/api/admin/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+    } catch (err) {
+      console.error(err);
+    }
+
+    ADMIN_STATE.authenticated = false;
+    updateAdminUi();
+    setAdminMessage("Mode warga aktif kembali.");
+    loadReports();
+  });
 }
 
 function setLocationPickerState(active) {
@@ -282,21 +409,31 @@ function renderSidebar(reports) {
             ? `<img src="${photoUrl}" alt="foto laporan"/>`
             : ""
         }
-        <select class="status-select" data-row="${r.rowNumber}">
-          <option ${r.status === "Belum Ditangani" ? "selected" : ""}>Belum Ditangani</option>
-          <option ${r.status === "Sedang Ditindaklanjuti" ? "selected" : ""}>Sedang Ditindaklanjuti</option>
-          <option ${r.status === "Selesai Ditangani" ? "selected" : ""}>Selesai Ditangani</option>
-        </select>
-        <div class="report-actions">
-          <button class="delete-btn" type="button" data-row="${r.rowNumber}">Hapus</button>
-        </div>
+        ${
+          ADMIN_STATE.authenticated
+            ? `
+              <select class="status-select" data-row="${r.rowNumber}">
+                <option ${r.status === "Belum Ditangani" ? "selected" : ""}>Belum Ditangani</option>
+                <option ${r.status === "Sedang Ditindaklanjuti" ? "selected" : ""}>Sedang Ditindaklanjuti</option>
+                <option ${r.status === "Selesai Ditangani" ? "selected" : ""}>Selesai Ditangani</option>
+              </select>
+              <div class="report-actions">
+                <button class="delete-btn" type="button" data-row="${r.rowNumber}">Hapus</button>
+              </div>
+            `
+            : `<p class="field-hint">Warga hanya dapat melihat laporan terbaru.</p>`
+        }
       `;
-      div.querySelector(".status-select").addEventListener("change", (e) => {
-        updateStatus(r.rowNumber, e.target.value);
-      });
-      div.querySelector(".delete-btn").addEventListener("click", () => {
-        deleteReport(r.rowNumber);
-      });
+
+      if (ADMIN_STATE.authenticated) {
+        div.querySelector(".status-select").addEventListener("change", (e) => {
+          updateStatus(r.rowNumber, e.target.value);
+        });
+        div.querySelector(".delete-btn").addEventListener("click", () => {
+          deleteReport(r.rowNumber);
+        });
+      }
+
       list.appendChild(div);
     });
 }
@@ -361,5 +498,7 @@ async function loadReports() {
 
 initMap();
 bindReportForm();
+bindAdminPanel();
+fetchAdminSession();
 loadReports();
 setInterval(loadReports, 15000); // auto-refresh tiap 15 detik
