@@ -12,6 +12,17 @@ const CREDENTIALS_PATH = path.resolve(
   process.env.GOOGLE_APPLICATION_CREDENTIALS || "./credentials.json"
 );
 
+function getServiceAccountCredentials() {
+  const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!rawJson) return null;
+
+  try {
+    return JSON.parse(rawJson);
+  } catch (err) {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON tidak valid (bukan JSON yang benar).");
+  }
+}
+
 // Header kolom yang dipakai di sheet. Baris pertama sheet HARUS persis ini.
 const HEADERS = [
   "Timestamp",
@@ -25,8 +36,10 @@ const HEADERS = [
 ];
 
 function getAuth() {
+  const inlineCredentials = getServiceAccountCredentials();
+
   return new google.auth.GoogleAuth({
-    keyFile: CREDENTIALS_PATH,
+    ...(inlineCredentials ? { credentials: inlineCredentials } : { keyFile: CREDENTIALS_PATH }),
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 }
