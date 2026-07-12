@@ -149,6 +149,16 @@ async function updateStatus(rowNumber, status) {
   });
 }
 
+async function updateFotoReference(rowNumber, fotoReference) {
+  const sheets = await getSheetsClient();
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_NAME}!H${rowNumber}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [[fotoReference]] },
+  });
+}
+
 async function deleteReport(rowNumber) {
   const sheets = await getSheetsClient();
   await sheets.spreadsheets.values.update({
@@ -164,5 +174,6 @@ module.exports = {
   appendReport,
   getAllReports,
   updateStatus,
+  updateFotoReference,
   deleteReport,
 };

@@ -246,6 +246,16 @@ function renderStats(reports) {
   ).length;
 }
 
+function resolvePhotoUrl(photoRef) {
+  if (!photoRef) return "";
+
+  const normalizedPhotoRef = String(photoRef).trim();
+  if (!normalizedPhotoRef || normalizedPhotoRef === "-") return "";
+  if (/^https?:\/\//i.test(normalizedPhotoRef)) return normalizedPhotoRef;
+
+  return `/uploads/${encodeURIComponent(normalizedPhotoRef)}`;
+}
+
 function renderSidebar(reports) {
   const list = document.getElementById("reportList");
   list.innerHTML = "";
@@ -262,13 +272,14 @@ function renderSidebar(reports) {
       const div = document.createElement("div");
       div.className = "report-item";
       const cls = STATUS_CLASS[r.status] || "belum";
+      const photoUrl = resolvePhotoUrl(r.foto);
       div.innerHTML = `
         <strong>${r.nama}</strong> — ${r.timestamp}<br/>
         ${r.deskripsi}
         <div class="badge ${cls}">${r.status}</div><br/>
         ${
-          r.foto && r.foto !== "-"
-            ? `<img src="/uploads/${r.foto}" alt="foto laporan"/>`
+          photoUrl
+            ? `<img src="${photoUrl}" alt="foto laporan"/>`
             : ""
         }
         <select class="status-select" data-row="${r.rowNumber}">
@@ -316,12 +327,13 @@ function renderMarkers(reports) {
           icon: reporterIcon(color),
         }).addTo(map);
 
+    const photoUrl = resolvePhotoUrl(item.foto);
     marker.bindPopup(`
       <strong>${item.name || item.nama}</strong><br/>
       ${item.description || item.deskripsi || ""}<br/>
       ${item.status && item.status !== "TPS" ? `<em>${item.status}</em><br/>` : ""}
       ${item.timestamp ? item.timestamp : ""}
-      ${item.foto && item.foto !== "-" ? `<br/><img src="/uploads/${item.foto}" style="width:150px;border-radius:6px;margin-top:6px"/>` : ""}
+      ${photoUrl ? `<br/><img src="${photoUrl}" style="width:150px;border-radius:6px;margin-top:6px"/>` : ""}
     `);
 
     markers.push(marker);

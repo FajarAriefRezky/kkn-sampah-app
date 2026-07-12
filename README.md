@@ -91,6 +91,24 @@ Untuk membuat website tetap berjalan saat laptop mati, deploy ke server cloud. R
 - Folder `uploads/` pada hosting cloud biasanya **tidak permanen**. Untuk produksi, pindahkan penyimpanan foto ke layanan object storage (Cloudinary/S3/R2).
 - File konfigurasi deploy untuk Railway sudah disediakan di [railway.json](railway.json).
 
+### Cloudinary untuk foto laporan (disarankan production)
+Jika variabel Cloudinary tersedia, upload foto dari form web akan langsung disimpan ke Cloudinary, bukan ke folder lokal.
+
+Tambahkan variabel berikut di Railway:
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+- `CLOUDINARY_FOLDER` (opsional, contoh: `kkn-sampah`)
+
+### Custom domain Railway (URL resmi desa)
+1. Buka service Railway kamu > tab **Domains**.
+2. Pilih **Custom Domain** lalu masukkan domain/subdomain (contoh: `lapor-sampah.desakamu.id`).
+3. Railway akan memberi record DNS yang harus ditambahkan di penyedia domain:
+   - biasanya `CNAME` untuk subdomain
+   - atau `A/ALIAS` untuk root domain
+4. Tambahkan record tersebut di panel DNS domain kamu.
+5. Tunggu status domain di Railway menjadi **Active**.
+
 ---
 
 ## 4. Cara Kerja Bot (untuk warga)

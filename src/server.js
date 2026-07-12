@@ -11,6 +11,7 @@ const crypto = require("crypto");
 const http = require("http");
 const https = require("https");
 const multer = require("multer");
+const { v2: cloudinary } = require("cloudinary");
 const selfsigned = require("selfsigned");
 require("dotenv").config();
 
@@ -31,12 +32,25 @@ const IS_CLOUD_ENV = Boolean(
 const FORCE_LOCAL_HTTPS = process.env.FORCE_LOCAL_HTTPS === "1";
 const RUN_LOCAL_HTTPS = !IS_CLOUD_ENV || FORCE_LOCAL_HTTPS;
 const RUN_HTTP_FALLBACK = process.env.RUN_HTTP_FALLBACK !== "0";
+const USE_CLOUDINARY = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+);
 const UPLOAD_DIR = path.resolve(__dirname, "..", "uploads");
 const CERT_DIR = path.resolve(__dirname, "..", "certs");
 const CERT_PATH = path.join(CERT_DIR, "cert.pem");
 const KEY_PATH = path.join(CERT_DIR, "key.pem");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 if (!fs.existsSync(CERT_DIR)) fs.mkdirSync(CERT_DIR, { recursive: true });
+
+if (USE_CLOUDINARY) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 function getLocalIp() {
   const interfaces = os.networkInterfaces();
@@ -50,14 +64,35 @@ function getLocalIp() {
   return "127.0.0.1";
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || "jpg");
-    cb(null, `report_${Date.now()}${ext}`);
-  },
-});
+const storage = USE_CLOUDINARY
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+      filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname || "jpg");
+        cb(null, `report_${Date.now()}${ext}`);
+      },
+    });
+
 const upload = multer({ storage });
+
+function uploadToCloudinary(file) {
+  return new Promise((resolve, reject) => {
+    const folder = process.env.CLOUDINARY_FOLDER || "kkn-sampah";
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        return resolve(result?.secure_url);
+      }
+    );
+
+    uploadStream.end(file.buffer);
+  });
+}
 
 app.use(cors());
 app.use(express.json());
@@ -86,13 +121,18 @@ app.post("/api/reports", upload.single("foto"), async (req, res) => {
       return res.status(400).json({ ok: false, message: "Semua field wajib diisi." });
     }
 
+    let fotoReference;
+    if (req.file) {
+      fotoReference = USE_CLOUDINARY ? await uploadToCloudinary(req.file) : req.file.filename;
+    }
+
     await appendReport({
       nomorWa,
       nama,
       deskripsi,
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
-      fotoFilename: req.file ? req.file.filename : undefined,
+      fotoFilename: fotoReference,
     });
 
     res.json({ ok: true, message: "Laporan berhasil dikirim." });
