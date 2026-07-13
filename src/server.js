@@ -22,8 +22,12 @@ const PORT = Number(process.env.PORT) || 3000;
 const HTTP_PORT = Number(process.env.HTTP_PORT) || 3001;
 const HOST = process.env.HOST || "0.0.0.0";
 const HTTPS_HOST = process.env.HTTPS_HOST || "PetaTitikTPS";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET || "";
+const ADMIN_LOGIN_ATTEMPTS = {}; // { ip: { count, blockedUntil } }
+const MAX_LOGIN_ATTEMPTS = 5;
+const BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 const IS_CLOUD_ENV = Boolean(
   process.env.RAILWAY_ENVIRONMENT ||
     process.env.RENDER ||
@@ -70,26 +74,62 @@ function parseCookies(cookieHeader = "") {
     }, {});
 }
 
-function createAdminSessionToken() {
-  if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) return "";
+function createAdminSessionToken(username) {
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) return "";
 
   return crypto
     .createHmac("sha256", ADMIN_SESSION_SECRET)
-    .update(ADMIN_PASSWORD)
+    .update(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`)
     .digest("hex");
 }
 
 function isAdminAuthenticated(req) {
-  if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) return false;
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) return false;
 
   const cookies = parseCookies(req.headers.cookie || "");
-  return cookies.admin_session === createAdminSessionToken();
+  return cookies.admin_session === createAdminSessionToken(ADMIN_USERNAME);
 }
 
-function setAdminSessionCookie(res) {
+function getClientIp(req) {
+  return req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress || "unknown";
+}
+
+function isLoginBlocked(ip) {
+  const now = Date.now();
+  const attempt = ADMIN_LOGIN_ATTEMPTS[ip];
+  
+  if (!attempt) return false;
+  if (now > attempt.blockedUntil) {
+    delete ADMIN_LOGIN_ATTEMPTS[ip];
+    return false;
+  }
+  
+  return true;
+}
+
+function recordLoginAttempt(ip, success) {
+  const now = Date.now();
+  
+  if (success) {
+    delete ADMIN_LOGIN_ATTEMPTS[ip];
+    return;
+  }
+  
+  if (!ADMIN_LOGIN_ATTEMPTS[ip]) {
+    ADMIN_LOGIN_ATTEMPTS[ip] = { count: 0, blockedUntil: 0 };
+  }
+  
+  ADMIN_LOGIN_ATTEMPTS[ip].count++;
+  
+  if (ADMIN_LOGIN_ATTEMPTS[ip].count >= MAX_LOGIN_ATTEMPTS) {
+    ADMIN_LOGIN_ATTEMPTS[ip].blockedUntil = now + BLOCK_DURATION_MS;
+  }
+}
+
+function setAdminSessionCookie(res, username) {
   const secure = RUN_LOCAL_HTTPS || IS_CLOUD_ENV;
   const cookieParts = [
-    `admin_session=${encodeURIComponent(createAdminSessionToken())}`,
+    `admin_session=${encodeURIComponent(createAdminSessionToken(username))}`,
     "Path=/",
     "HttpOnly",
     "SameSite=Lax",
@@ -115,7 +155,7 @@ function clearAdminSessionCookie(res) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
     return res.status(503).json({ ok: false, message: "Akses admin belum dikonfigurasi di server." });
   }
 
@@ -174,22 +214,37 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.resolve(__dirname, "..", "public")));
 app.use("/uploads", express.static(UPLOAD_DIR));
 
+app.get("/admin", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "..", "public", "admin.html"));
+});
+
 app.get("/api/admin/session", (req, res) => {
-  const enabled = Boolean(ADMIN_PASSWORD && ADMIN_SESSION_SECRET);
+  const enabled = Boolean(ADMIN_USERNAME && ADMIN_PASSWORD && ADMIN_SESSION_SECRET);
   res.json({ ok: true, enabled, authenticated: enabled ? isAdminAuthenticated(req) : false });
 });
 
 app.post("/api/admin/login", (req, res) => {
-  if (!ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
+  const clientIp = getClientIp(req);
+  
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
     return res.status(503).json({ ok: false, message: "Akses admin belum dikonfigurasi di server." });
   }
 
-  const password = String(req.body?.password || "");
-  if (password !== ADMIN_PASSWORD) {
-    return res.status(401).json({ ok: false, message: "Password admin salah." });
+  if (isLoginBlocked(clientIp)) {
+    return res.status(429).json({ ok: false, message: "Terlalu banyak percobaan login gagal. Coba lagi dalam 15 menit." });
   }
 
-  setAdminSessionCookie(res);
+  const username = String(req.body?.username || "").trim();
+  const password = String(req.body?.password || "");
+  
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    recordLoginAttempt(clientIp, false);
+    const attempt = ADMIN_LOGIN_ATTEMPTS[clientIp];
+    return res.status(401).json({ ok: false, message: `Username atau password salah. (Percobaan: ${attempt.count}/${MAX_LOGIN_ATTEMPTS})` });
+  }
+
+  recordLoginAttempt(clientIp, true);
+  setAdminSessionCookie(res, username);
   return res.json({ ok: true, message: "Login admin berhasil." });
 });
 

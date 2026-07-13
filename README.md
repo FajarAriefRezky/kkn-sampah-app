@@ -101,13 +101,29 @@ Tambahkan variabel berikut di Railway:
 - `CLOUDINARY_FOLDER` (opsional, contoh: `kkn-sampah`)
 
 ### Hak akses admin dashboard
-Secara default, warga hanya bisa melihat daftar laporan terbaru. Mengubah status dan menghapus laporan hanya bisa dilakukan oleh admin yang login.
+Secara default, warga hanya bisa melihat daftar laporan terbaru di halaman utama. Mengubah status dan menghapus laporan hanya bisa dilakukan oleh admin yang login.
 
-Tambahkan variabel berikut di server atau Railway:
-- `ADMIN_PASSWORD` = password admin dashboard
-- `ADMIN_SESSION_SECRET` = string acak panjang untuk menandatangani sesi admin
+**Halaman Admin**: Buka `/admin` untuk masuk ke halaman login admin terpisah.
 
-Jika dua variabel ini belum diisi, tombol login admin akan tampil sebagai belum dikonfigurasi dan endpoint edit/hapus otomatis ditolak server.
+**Variabel environment yang diperlukan**:
+- `ADMIN_USERNAME` = username untuk login admin (contoh: `admin`)
+- `ADMIN_PASSWORD` = password admin dashboard (gunakan password yang kuat)
+- `ADMIN_SESSION_SECRET` = string acak panjang untuk menandatangani sesi admin (minimum 32 karakter)
+
+**Fitur Keamanan**:
+- Login memerlukan username + password (bukan hanya password)
+- Sesi dienkripsi dengan HMAC-SHA256
+- Cookie HttpOnly dan Secure untuk mencegah XSS
+- Rate limiting: maksimal 5 kali gagal login dalam 15 menit, kemudian diblokir sementara
+- Pencatatan percobaan login per IP address
+
+**Konfigurasi di Railway**:
+1. Buka Railway Dashboard > Project > Service KKN_TPS
+2. Settings tab > Environment Variables
+3. Tambahkan tiga variabel di atas
+4. Redeploy service
+
+Jika variabel belum diisi, halaman admin akan menampilkan pesan "Akses admin belum dikonfigurasi".
 
 ### Custom domain Railway (URL resmi desa)
 1. Buka service Railway kamu > tab **Domains**.
