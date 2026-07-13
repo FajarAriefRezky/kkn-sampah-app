@@ -24,6 +24,35 @@
   <main>
     <div id="map"></div>
     <aside id="sidebar">
+      <!-- Form Tambah TPS (hidden by default) -->
+      <section class="panel hidden" id="addTpsPanel">
+        <h2>Tambah TPS / Bank Sampah Baru</h2>
+        <form id="addTpsForm" class="report-form" enctype="multipart/form-data">
+          <label>Nama TPS / Bank Sampah</label>
+          <input type="text" id="tpsName" name="tpsName" placeholder="Contoh: TPS Pasar Raya" required />
+
+          <label>Nomor WA (penambah)</label>
+          <input type="text" id="tpsNomorWa" name="tpsNomorWa" placeholder="Contoh: 628123456789" required />
+
+          <label>Deskripsi (opsional)</label>
+          <textarea id="tpsDeskripsi" name="tpsDeskripsi" rows="2" placeholder="Lokasi detail, jam operasional, dll"></textarea>
+
+          <label>Koordinat lokasi</label>
+          <div style="background:#f0f0f0;padding:8px;border-radius:4px;font-size:0.9rem;">
+            <p id="tpsCoordDisplay" style="margin:4px 0;color:#666;">Lokasi akan otomatis diisi dari geolocation Anda</p>
+          </div>
+          <input type="hidden" id="tpsLatitude" name="tpsLatitude" />
+          <input type="hidden" id="tpsLongitude" name="tpsLongitude" />
+
+          <label>Foto TPS (opsional)</label>
+          <input type="file" id="tpsFoto" name="tpsFoto" accept="image/*" />
+
+          <button type="submit">Tambahkan TPS</button>
+          <button type="button" id="cancelAddTpsBtn" style="background:#999;">Batalkan</button>
+          <p id="addTpsMessage" class="form-message"></p>
+        </form>
+      </section>
+
       <section class="panel">
         <h2>Form Laporan Warga</h2>
         <form id="reportForm" class="report-form" enctype="multipart/form-data">
@@ -39,6 +68,7 @@
           <div class="location-actions">
             <button type="button" id="useMyLocationBtn">Gunakan lokasi saya</button>
             <button type="button" id="pickLocationBtn">Pilih lokasi di peta</button>
+            <button type="button" id="addTpsBtn" style="background:#1565C0;">Tambah TPS Baru</button>
           </div>
 
           <label>Koordinat lokasi (garis lintang)</label>

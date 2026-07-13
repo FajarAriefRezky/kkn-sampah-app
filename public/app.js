@@ -25,6 +25,8 @@ let locationPickerMarker = null;
 let reporterPreviewMarker = null;
 let locationPickerActive = false;
 let locationPickerMessageTimer = null;
+let addTpsMode = false;
+let addTpsCoords = { lat: null, lng: null };
 
 const defaultTpsPoints = [
   { name: "TPS Pusat Kota", lat: -6.4001, lng: 107.4438, type: "TPS" },
@@ -245,6 +247,78 @@ function bindAdminPanel() {
   });
 }
 
+function bindAddTpsForm() {
+  const form = document.getElementById("addTpsForm");
+  if (!form) return;
+
+  const cancelBtn = document.getElementById("cancelAddTpsBtn");
+
+  cancelBtn?.addEventListener("click", () => {
+    form.reset();
+    addTpsCoords = { lat: null, lng: null };
+    document.getElementById("tpsCoordDisplay").textContent = "Lokasi akan otomatis diisi dari geolocation Anda";
+    setAddTpsMode(false);
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const tpsName = document.getElementById("tpsName").value.trim();
+    const tpsNomorWa = document.getElementById("tpsNomorWa").value.trim();
+    const tpsDeskripsi = document.getElementById("tpsDeskripsi").value.trim();
+    const tpsLat = document.getElementById("tpsLatitude").value.trim();
+    const tpsLng = document.getElementById("tpsLongitude").value.trim();
+
+    if (!tpsName || !tpsNomorWa || !tpsLat || !tpsLng) {
+      document.getElementById("addTpsMessage").textContent = "Nama TPS, nomor WA, dan koordinat wajib diisi.";
+      document.getElementById("addTpsMessage").style.color = "#C62828";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("nama", tpsName);
+    formData.append("nomorWa", tpsNomorWa);
+    formData.append("deskripsi", tpsDeskripsi);
+    formData.append("latitude", tpsLat);
+    formData.append("longitude", tpsLng);
+
+    const tpsFotoInput = document.getElementById("tpsFoto");
+    if (tpsFotoInput.files[0]) {
+      formData.append("foto", tpsFotoInput.files[0]);
+    }
+
+    try {
+      const res = await fetch("/api/tps", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json.ok) {
+        document.getElementById("addTpsMessage").textContent = json.message || "Gagal menambahkan TPS.";
+        document.getElementById("addTpsMessage").style.color = "#C62828";
+        return;
+      }
+
+      document.getElementById("addTpsMessage").textContent = "TPS berhasil ditambahkan! 🎉";
+      document.getElementById("addTpsMessage").style.color = "#2E7D32";
+      form.reset();
+      addTpsCoords = { lat: null, lng: null };
+      document.getElementById("tpsCoordDisplay").textContent = "Lokasi akan otomatis diisi dari geolocation Anda";
+
+      // Reload data peta
+      setTimeout(() => {
+        setAddTpsMode(false);
+        loadReports();
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      document.getElementById("addTpsMessage").textContent = "Gagal menambahkan TPS. Coba lagi.";
+      document.getElementById("addTpsMessage").style.color = "#C62828";
+    }
+  });
+}
+
 function setLocationPickerState(active) {
   locationPickerActive = active;
   const pickBtn = document.getElementById("pickLocationBtn");
@@ -263,12 +337,31 @@ function setLocationPickerState(active) {
   }
 }
 
+function setAddTpsMode(active) {
+  addTpsMode = active;
+  const panel = document.getElementById("addTpsPanel");
+  const reportPanel = document.getElementById("reportForm")?.parentElement;
+  
+  if (active) {
+    // Tampilkan form tambah TPS
+    if (panel) panel.classList.remove("hidden");
+    if (reportPanel) reportPanel.style.display = "none";
+    showFormMessage("Silakan isi form TPS di atas, atau gunakan tombol geolocation untuk mendapatkan lokasi Anda.");
+  } else {
+    // Sembunyikan form tambah TPS
+    if (panel) panel.classList.add("hidden");
+    if (reportPanel) reportPanel.style.display = "block";
+    showFormMessage("Silakan lanjutkan mengisi form atau kirim laporan.");
+  }
+}
+
 function bindReportForm() {
   const form = document.getElementById("reportForm");
   if (!form) return;
 
   const useMyLocationBtn = document.getElementById("useMyLocationBtn");
   const pickLocationBtn = document.getElementById("pickLocationBtn");
+  const addTpsBtn = document.getElementById("addTpsBtn");
 
   useMyLocationBtn?.addEventListener("click", () => {
     if (!navigator.geolocation) {
@@ -324,6 +417,47 @@ function bindReportForm() {
     if (locationPickerActive) {
       showFormMessage("Klik titik di peta untuk memilih lokasi laporan.");
     }
+  });
+
+  addTpsBtn?.addEventListener("click", () => {
+    if (!navigator.geolocation) {
+      showFormMessage("Browser Anda belum mendukung penentuan lokasi otomatis.", true);
+      return;
+    }
+
+    showFormMessage("Sedang mencari lokasi Anda untuk menambah TPS...");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+
+        if (accuracy > 150) {
+          showFormMessage(
+            `Akurasi lokasi masih rendah (${Math.round(accuracy)} m). Coba lagi di tempat terbuka.`,
+            true
+          );
+          return;
+        }
+
+        // Simpan koordinat untuk form TPS
+        addTpsCoords.lat = latitude;
+        addTpsCoords.lng = longitude;
+        document.getElementById("tpsLatitude").value = latitude.toFixed(6);
+        document.getElementById("tpsLongitude").value = longitude.toFixed(6);
+        document.getElementById("tpsCoordDisplay").textContent = 
+          `Lokasi Anda: ${latitude.toFixed(4)}, ${longitude.toFixed(4)} (akurasi ${Math.round(accuracy)} m)`;
+
+        setAddTpsMode(true);
+      },
+      (error) => {
+        const messages = {
+          1: "Akses lokasi ditolak. Izinkan akses lokasi di browser.",
+          2: "Sinyal lokasi tidak tersedia. Coba lagi atau gunakan tombol di peta.",
+          3: "Waktu pencarian lokasi habis. Coba lagi.",
+        };
+        showFormMessage(messages[error.code] || "Gagal mengambil lokasi.", true);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
   });
 
   form.addEventListener("submit", async (e) => {
@@ -498,7 +632,9 @@ async function loadReports() {
 
 initMap();
 bindReportForm();
+bindAddTpsForm();
 bindAdminPanel();
 fetchAdminSession();
 loadReports();
+setInterval(loadReports, 15000);
 setInterval(loadReports, 15000); // auto-refresh tiap 15 detik

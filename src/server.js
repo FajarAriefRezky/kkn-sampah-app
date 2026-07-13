@@ -15,7 +15,7 @@ const { v2: cloudinary } = require("cloudinary");
 const selfsigned = require("selfsigned");
 require("dotenv").config();
 
-const { getAllReports, updateStatus, ensureHeader, appendReport, deleteReport } = require("./sheets");
+const { getAllReports, updateStatus, ensureHeader, appendReport, deleteReport, appendTps, getAllTps } = require("./sheets");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -257,12 +257,26 @@ app.post("/api/admin/logout", (req, res) => {
 app.get("/api/reports", async (req, res) => {
   try {
     const reports = await getAllReports();
-    res.json({ ok: true, desa: process.env.NAMA_DESA || "Desa", data: reports });
+    const tpsPoints = await getAllTps();
+    // Gabung laporan dan TPS
+    const allData = [...reports, ...tpsPoints];
+    res.json({ ok: true, desa: process.env.NAMA_DESA || "Desa", data: allData });
   } catch (err) {
     console.error(err);
     res
       .status(500)
       .json({ ok: false, message: "Gagal mengambil data dari Google Sheets. Cek konfigurasi .env dan credentials.json." });
+  }
+});
+
+// Ambil hanya TPS
+app.get("/api/tps", async (req, res) => {
+  try {
+    const tps = await getAllTps();
+    res.json({ ok: true, data: tps });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, message: "Gagal mengambil data TPS." });
   }
 });
 
@@ -321,6 +335,35 @@ app.post("/api/reports/:rowNumber/delete", requireAdmin, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ ok: false, message: "Gagal menghapus laporan." });
+  }
+});
+
+// Tambah TPS/Bank Sampah baru dari form web
+app.post("/api/tps", upload.single("foto"), async (req, res) => {
+  try {
+    const { nama, nomorWa, deskripsi, latitude, longitude } = req.body;
+    if (!nama || !nomorWa || latitude === undefined || longitude === undefined) {
+      return res.status(400).json({ ok: false, message: "Nama, nomor WA, dan koordinat wajib diisi." });
+    }
+
+    let fotoReference;
+    if (req.file) {
+      fotoReference = USE_CLOUDINARY ? await uploadToCloudinary(req.file) : req.file.filename;
+    }
+
+    await appendTps({
+      nomorWa,
+      nama,
+      deskripsi: deskripsi || "",
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      fotoFilename: fotoReference,
+    });
+
+    res.json({ ok: true, message: "TPS baru berhasil ditambahkan." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, message: "Gagal menambahkan TPS." });
   }
 });
 

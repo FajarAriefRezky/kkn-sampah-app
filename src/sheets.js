@@ -8,6 +8,7 @@ require("dotenv").config();
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const SHEET_NAME = process.env.SHEET_NAME || "Laporan";
+const TPS_SHEET_NAME = "Titik TPS";
 const CREDENTIALS_PATH = path.resolve(
   process.env.GOOGLE_APPLICATION_CREDENTIALS || "./credentials.json"
 );
@@ -23,7 +24,7 @@ function getServiceAccountCredentials() {
   }
 }
 
-// Header kolom yang dipakai di sheet. Baris pertama sheet HARUS persis ini.
+// Header kolom yang dipakai di sheet laporan. Baris pertama sheet HARUS persis ini.
 const HEADERS = [
   "Timestamp",
   "Nomor WA",
@@ -32,6 +33,17 @@ const HEADERS = [
   "Latitude",
   "Longitude",
   "Status",
+  "Foto",
+];
+
+// Header untuk sheet Titik TPS
+const TPS_HEADERS = [
+  "Timestamp",
+  "Nomor WA",
+  "Nama TPS",
+  "Deskripsi",
+  "Latitude",
+  "Longitude",
   "Foto",
 ];
 
@@ -50,7 +62,7 @@ async function getSheetsClient() {
   return google.sheets({ version: "v4", auth: client });
 }
 
-// Pastikan baris header ada. Dipanggil sekali saat startup.
+// Pastikan baris header ada di sheet laporan. Dipanggil sekali saat startup.
 async function ensureHeader() {
   const sheets = await getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
@@ -66,7 +78,58 @@ async function ensureHeader() {
       valueInputOption: "RAW",
       requestBody: { values: [HEADERS] },
     });
-    console.log("[sheets] Header baris pertama berhasil dibuat.");
+    console.log("[sheets] Header sheet laporan berhasil dibuat.");
+  }
+
+  // Pastikan sheet Titik TPS juga ada
+  try {
+    await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${TPS_SHEET_NAME}!A1:G1`,
+    });
+  } catch (err) {
+    if (err.message?.includes("not found")) {
+      // Sheet belum ada, buat
+      try {
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: SPREADSHEET_ID,
+          requestBody: {
+            requests: [
+              {
+                addSheet: {
+                  properties: {
+                    title: TPS_SHEET_NAME,
+                  },
+                },
+              },
+            ],
+          },
+        });
+        console.log(`[sheets] Sheet "${TPS_SHEET_NAME}" berhasil dibuat.`);
+      } catch (addErr) {
+        console.warn(`[sheets] Gagal membuat sheet ${TPS_SHEET_NAME}:`, addErr.message);
+      }
+    }
+  }
+
+  // Pastikan header di sheet TPS
+  try {
+    const tpsRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${TPS_SHEET_NAME}!A1:G1`,
+    });
+    const hasTpsHeader = tpsRes.data.values && tpsRes.data.values.length > 0;
+    if (!hasTpsHeader) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${TPS_SHEET_NAME}!A1:G1`,
+        valueInputOption: "RAW",
+        requestBody: { values: [TPS_HEADERS] },
+      });
+      console.log("[sheets] Header sheet Titik TPS berhasil dibuat.");
+    }
+  } catch (err) {
+    console.warn("[sheets] Gagal setup header TPS:", err.message);
   }
 }
 
@@ -169,6 +232,79 @@ async function deleteReport(rowNumber) {
   });
 }
 
+// Tambah TPS baru (dari form warga di peta)
+async function appendTps({
+  nomorWa,
+  nama,
+  deskripsi,
+  latitude,
+  longitude,
+  fotoFilename,
+}) {
+  const sheets = await getSheetsClient();
+  const timestamp = new Date().toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+  });
+
+  const row = [
+    timestamp,
+    nomorWa,
+    nama || "-",
+    deskripsi || "-",
+    latitude,
+    longitude,
+    fotoFilename || "-",
+  ];
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${TPS_SHEET_NAME}!A:G`,
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: { values: [row] },
+  });
+
+  console.log(`[sheets] TPS baru dari ${nomorWa} tersimpan.`);
+}
+
+// Ambil semua TPS dari sheet (dipakai dashboard/peta)
+async function getAllTps() {
+  const sheets = await getSheetsClient();
+  
+  try {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${TPS_SHEET_NAME}!A2:G`,
+    });
+
+    const parseCoordinate = (value) => {
+      if (typeof value === "number") return value;
+      if (value === undefined || value === null) return NaN;
+
+      const normalized = String(value).trim().replace(/\s+/g, "").replace(",", ".");
+      return parseFloat(normalized);
+    };
+
+    const rows = res.data.values || [];
+    return rows
+      .map((r, idx) => ({
+        rowNumber: idx + 2,
+        timestamp: r[0] || "",
+        nomorWa: r[1] || "",
+        name: r[2] || "TPS",
+        deskripsi: r[3] || "",
+        latitude: parseCoordinate(r[4]),
+        longitude: parseCoordinate(r[5]),
+        foto: r[6] || "",
+        type: "TPS",
+      }))
+      .filter((r) => !isNaN(r.latitude) && !isNaN(r.longitude));
+  } catch (err) {
+    console.warn("[sheets] Gagal ambil TPS:", err.message);
+    return [];
+  }
+}
+
 module.exports = {
   ensureHeader,
   appendReport,
@@ -176,4 +312,6 @@ module.exports = {
   updateStatus,
   updateFotoReference,
   deleteReport,
+  appendTps,
+  getAllTps,
 };
