@@ -19,6 +19,8 @@ const ADMIN_STATE = {
   enabled: false,
 };
 
+let currentTab = "tps"; // track tab yang sedang aktif
+
 let map;
 let markers = [];
 let locationPickerMarker = null;
@@ -207,6 +209,44 @@ async function deleteReport(rowNumber) {
     console.error(err);
     setAdminMessage("Gagal menghapus laporan.", true);
   }
+}
+
+function switchTab(tabName) {
+  currentTab = tabName;
+  const tpsPanel = document.getElementById("tpsFormPanel");
+  const reportPanel = document.getElementById("reportFormPanel");
+  const tabTpsBtn = document.getElementById("tabTpsBtn");
+  const tabReportBtn = document.getElementById("tabReportBtn");
+
+  if (tabName === "tps") {
+    // Tampilkan TPS form, sembunyikan laporan
+    tpsPanel.style.display = "block";
+    reportPanel.style.display = "none";
+    
+    // Update button style
+    tabTpsBtn.style.background = "#1565C0";
+    tabTpsBtn.style.color = "white";
+    tabReportBtn.style.background = "#ddd";
+    tabReportBtn.style.color = "#333";
+  } else {
+    // Tampilkan laporan form, sembunyikan TPS
+    tpsPanel.style.display = "none";
+    reportPanel.style.display = "block";
+    
+    // Update button style
+    tabTpsBtn.style.background = "#ddd";
+    tabTpsBtn.style.color = "#333";
+    tabReportBtn.style.background = "#2E7D32";
+    tabReportBtn.style.color = "white";
+  }
+}
+
+function bindTabButtons() {
+  const tabTpsBtn = document.getElementById("tabTpsBtn");
+  const tabReportBtn = document.getElementById("tabReportBtn");
+
+  tabTpsBtn?.addEventListener("click", () => switchTab("tps"));
+  tabReportBtn?.addEventListener("click", () => switchTab("report"));
 }
 
 function bindAdminPanel() {
@@ -654,10 +694,10 @@ async function loadReports() {
 }
 
 initMap();
+bindTabButtons();
 bindReportForm();
 bindAddTpsForm();
 bindAdminPanel();
 fetchAdminSession();
 loadReports();
 setInterval(loadReports, 15000);
-setInterval(loadReports, 15000); // auto-refresh tiap 15 detik

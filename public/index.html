@@ -24,8 +24,18 @@
   <main>
     <div id="map"></div>
     <aside id="sidebar">
+      <!-- Tab Buttons untuk switch antara form TPS dan Laporan -->
+      <div style="display:flex;gap:8px;padding:12px;background:#f0f0f0;border-radius:6px;margin-bottom:12px;">
+        <button id="tabTpsBtn" type="button" style="flex:1;padding:10px;background:#1565C0;color:white;border:none;border-radius:4px;font-weight:bold;cursor:pointer;">
+          📍 Tambah TPS
+        </button>
+        <button id="tabReportBtn" type="button" style="flex:1;padding:10px;background:#ddd;color:#333;border:none;border-radius:4px;font-weight:bold;cursor:pointer;">
+          🗑️ Laporan Sampah
+        </button>
+      </div>
+
       <!-- Form Tambah TPS / Bank Sampah -->
-      <section class="panel">
+      <section class="panel" id="tpsFormPanel">
         <h2>📍 Tambah TPS / Bank Sampah</h2>
         <form id="addTpsForm" class="report-form" enctype="multipart/form-data">
           <label>Nama TPS / Bank Sampah <span style="color:red;">*</span></label>
@@ -60,7 +70,7 @@
       </section>
 
       <!-- Form Laporan Warga Tentang Sampah -->
-      <section class="panel">
+      <section class="panel" id="reportFormPanel" style="display:none;">
         <h2>🗑️ Laporan Sampah Warga</h2>
         <form id="reportForm" class="report-form" enctype="multipart/form-data">
           <label>Nama Pelapor <span style="color:red;">*</span></label>
@@ -86,9 +96,6 @@
           <small class="field-hint">Kalau belum tahu, tekan tombol di atas untuk pakai lokasi Anda atau pilih titik di peta.</small>
 
           <label>Foto Sampah (opsional)</label>
-          <input type="file" id="foto" name="foto" accept="image/*" />
-
-          <label>Foto (opsional)</label>
           <input type="file" id="foto" name="foto" accept="image/*" />
 
           <button type="submit">Kirim Laporan</button>
