@@ -377,6 +377,14 @@
       }
     }
 
+    function resolvePhotoUrl(photoRef) {
+      if (!photoRef) return "";
+      const normalizedPhotoRef = String(photoRef).trim();
+      if (!normalizedPhotoRef || normalizedPhotoRef === "-") return "";
+      if (/^https?:\/\//i.test(normalizedPhotoRef)) return normalizedPhotoRef;
+      return `/uploads/${encodeURIComponent(normalizedPhotoRef)}`;
+    }
+
     async function loadReports() {
       try {
         const res = await fetch("/api/reports", { credentials: "same-origin" });
@@ -397,18 +405,27 @@
 
         const html = reports
           .map(
-            (report, idx) => `
+            (report) => {
+              const photoUrl = resolvePhotoUrl(report.foto);
+              const photoHtml = photoUrl 
+                ? `<img src="${photoUrl}" style="width:100%;max-width:300px;border-radius:6px;margin-top:1rem;border:1px solid #ddd"/>`
+                : `<p style="color:#999;font-size:0.9rem;margin-top:0.5rem">Tidak ada foto</p>`;
+              return `
           <div class="report-item">
-            <h3>#${idx + 1} - ${report.status || "Pending"}</h3>
-            <p><strong>Lokasi:</strong> ${report.location || "-"}</p>
-            <p><strong>Deskripsi:</strong> ${report.description || "-"}</p>
-            <p><strong>Tanggal:</strong> ${report.date || "-"}</p>
+            <h3>${report.nama || "-"}</h3>
+            <p><strong>Status:</strong> ${report.status || "Pending"}</p>
+            <p><strong>Deskripsi:</strong> ${report.deskripsi || "-"}</p>
+            <p><strong>Lokasi:</strong> ${report.latitude ? `(${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)})` : "-"}</p>
+            <p><strong>Tanggal:</strong> ${report.timestamp || "-"}</p>
+            <p><strong>No. WA:</strong> ${report.nomorWa || "-"}</p>
+            ${photoHtml}
             <div class="report-actions">
-              <button class="btn-sm btn-status" onclick="editReportStatus(${idx + 2})">Ubah Status</button>
-              <button class="btn-sm btn-delete" onclick="deleteReport(${idx + 2})">Hapus</button>
+              <button class="btn-sm btn-status" onclick="editReportStatus(${report.rowNumber})">Ubah Status</button>
+              <button class="btn-sm btn-delete" onclick="deleteReport(${report.rowNumber})">Hapus</button>
             </div>
           </div>
-        `
+        `;
+            }
           )
           .join("");
 
