@@ -8,7 +8,7 @@ require("dotenv").config();
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const SHEET_NAME = process.env.SHEET_NAME || "Laporan";
-const TPS_SHEET_NAME = "Titik TPS";
+const TPS_SHEET_NAME = "TitikTPS";
 const CREDENTIALS_PATH = path.resolve(
   process.env.GOOGLE_APPLICATION_CREDENTIALS || "./credentials.json"
 );
@@ -88,8 +88,8 @@ async function ensureHeader() {
       range: `${TPS_SHEET_NAME}!A1:G1`,
     });
   } catch (err) {
-    if (err.message?.includes("not found")) {
-      // Sheet belum ada, buat
+    if (err.message?.includes("not found") || err.message?.includes("Unable to parse range")) {
+      // Sheet belum ada, coba buat
       try {
         await sheets.spreadsheets.batchUpdate({
           spreadsheetId: SPREADSHEET_ID,
@@ -106,30 +106,17 @@ async function ensureHeader() {
           },
         });
         console.log(`[sheets] Sheet "${TPS_SHEET_NAME}" berhasil dibuat.`);
+        // Tambahkan header setelah sheet dibuat
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: `${TPS_SHEET_NAME}!A1:G1`,
+          valueInputOption: "RAW",
+          requestBody: { values: [TPS_HEADERS] },
+        });
       } catch (addErr) {
-        console.warn(`[sheets] Gagal membuat sheet ${TPS_SHEET_NAME}:`, addErr.message);
+        console.warn(`[sheets] Gagal setup sheet TPS:`, addErr.message);
       }
     }
-  }
-
-  // Pastikan header di sheet TPS
-  try {
-    const tpsRes = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${TPS_SHEET_NAME}!A1:G1`,
-    });
-    const hasTpsHeader = tpsRes.data.values && tpsRes.data.values.length > 0;
-    if (!hasTpsHeader) {
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEET_ID,
-        range: `${TPS_SHEET_NAME}!A1:G1`,
-        valueInputOption: "RAW",
-        requestBody: { values: [TPS_HEADERS] },
-      });
-      console.log("[sheets] Header sheet Titik TPS berhasil dibuat.");
-    }
-  } catch (err) {
-    console.warn("[sheets] Gagal setup header TPS:", err.message);
   }
 }
 
