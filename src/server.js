@@ -258,9 +258,13 @@ app.get("/api/reports", async (req, res) => {
   try {
     const reports = await getAllReports();
     const tpsPoints = await getAllTps();
-    // Gabung laporan dan TPS
-    const allData = [...reports, ...tpsPoints];
-    res.json({ ok: true, desa: process.env.NAMA_DESA || "Desa", data: allData });
+    // Return terpisah: reports dan tps
+    res.json({ 
+      ok: true, 
+      desa: process.env.NAMA_DESA || "Desa", 
+      reports: reports,
+      tps: tpsPoints
+    });
   } catch (err) {
     console.error(err);
     res

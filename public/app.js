@@ -28,6 +28,11 @@ let reporterPreviewMarker = null;
 let tpsLocationPickerMarker = null;
 let locationPickerActive = false;
 let tpsLocationPickerActive = false;
+
+// Data storage untuk laporan terpisah
+let allReports = [];
+let allTps = [];
+let currentReportFilter = "warga"; // 'warga' atau 'tps'
 let locationPickerMessageTimer = null;
 
 const defaultTpsPoints = [
@@ -241,12 +246,36 @@ function switchTab(tabName) {
   }
 }
 
+function switchReportFilter(filterType) {
+  currentReportFilter = filterType;
+  const tabWargaBtn = document.getElementById("tabLaporanWarga");
+  const tabTpsBtn = document.getElementById("tabLaporanTps");
+  
+  if (filterType === "warga") {
+    tabWargaBtn.style.background = "#2E7D32";
+    tabWargaBtn.style.color = "white";
+    tabTpsBtn.style.background = "#ddd";
+    tabTpsBtn.style.color = "#333";
+  } else {
+    tabWargaBtn.style.background = "#ddd";
+    tabWargaBtn.style.color = "#333";
+    tabTpsBtn.style.background = "#1565C0";
+    tabTpsBtn.style.color = "white";
+  }
+  
+  renderReportList();
+}
+
 function bindTabButtons() {
   const tabTpsBtn = document.getElementById("tabTpsBtn");
   const tabReportBtn = document.getElementById("tabReportBtn");
+  const tabLaporanWargaBtn = document.getElementById("tabLaporanWarga");
+  const tabLaporanTpsBtn = document.getElementById("tabLaporanTps");
 
   tabTpsBtn?.addEventListener("click", () => switchTab("tps"));
   tabReportBtn?.addEventListener("click", () => switchTab("report"));
+  tabLaporanWargaBtn?.addEventListener("click", () => switchReportFilter("warga"));
+  tabLaporanTpsBtn?.addEventListener("click", () => switchReportFilter("tps"));
 }
 
 function bindAdminPanel() {
@@ -580,16 +609,20 @@ function resolvePhotoUrl(photoRef) {
   return `/uploads/${encodeURIComponent(normalizedPhotoRef)}`;
 }
 
-function renderSidebar(reports) {
+function renderReportList() {
   const list = document.getElementById("reportList");
   list.innerHTML = "";
 
-  if (reports.length === 0) {
-    list.innerHTML = "<p>Belum ada laporan masuk.</p>";
+  // Filter data based on currentReportFilter
+  let filteredData = currentReportFilter === "warga" ? allReports : allTps;
+
+  if (filteredData.length === 0) {
+    const filterLabel = currentReportFilter === "warga" ? "Laporan Warga" : "Laporan TPS";
+    list.innerHTML = `<p>Belum ada ${filterLabel} masuk.</p>`;
     return;
   }
 
-  reports
+  filteredData
     .slice()
     .reverse()
     .forEach((r) => {
@@ -683,9 +716,16 @@ async function loadReports() {
       return;
     }
     document.getElementById("desaName").textContent = json.desa;
-    renderStats(json.data);
-    renderSidebar(json.data);
-    renderMarkers(json.data);
+    
+    // Store data separately
+    allReports = json.reports || [];
+    allTps = json.tps || [];
+    
+    // For markers and stats, show both
+    const allData = [...allReports, ...allTps];
+    renderStats(allData);
+    renderReportList();  // Filtered based on currentReportFilter
+    renderMarkers(allData);
   } catch (err) {
     console.error(err);
     document.getElementById("desaName").textContent =
