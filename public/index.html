@@ -24,59 +24,69 @@
   <main>
     <div id="map"></div>
     <aside id="sidebar">
-      <!-- Form Tambah TPS (hidden by default) -->
-      <section class="panel hidden" id="addTpsPanel">
-        <h2>Tambah TPS / Bank Sampah Baru</h2>
+      <!-- Form Tambah TPS / Bank Sampah -->
+      <section class="panel">
+        <h2>📍 Tambah TPS / Bank Sampah</h2>
         <form id="addTpsForm" class="report-form" enctype="multipart/form-data">
-          <label>Nama TPS / Bank Sampah</label>
+          <label>Nama TPS / Bank Sampah <span style="color:red;">*</span></label>
           <input type="text" id="tpsName" name="tpsName" placeholder="Contoh: TPS Pasar Raya" required />
 
-          <label>Nomor WA (penambah)</label>
+          <label>Nomor WA Pelapor <span style="color:red;">*</span></label>
           <input type="text" id="tpsNomorWa" name="tpsNomorWa" placeholder="Contoh: 628123456789" required />
 
           <label>Deskripsi (opsional)</label>
-          <textarea id="tpsDeskripsi" name="tpsDeskripsi" rows="2" placeholder="Lokasi detail, jam operasional, dll"></textarea>
+          <textarea id="tpsDeskripsi" name="tpsDeskripsi" rows="2" placeholder="Lokasi detail, jam operasional, kapasitas, dll"></textarea>
+
+          <label>Ambil Lokasi <span style="color:red;">*</span></label>
+          <div class="location-actions">
+            <button type="button" id="tpsUseMyLocationBtn">📍 Gunakan lokasi saya</button>
+            <button type="button" id="tpsPickLocationBtn">🗺️ Pilih di peta</button>
+          </div>
 
           <label>Koordinat lokasi</label>
           <div style="background:#f0f0f0;padding:8px;border-radius:4px;font-size:0.9rem;">
-            <p id="tpsCoordDisplay" style="margin:4px 0;color:#666;">Lokasi akan otomatis diisi dari geolocation Anda</p>
+            <p id="tpsCoordDisplay" style="margin:4px 0;color:#666;">Klik salah satu tombol di atas untuk mendapatkan koordinat</p>
           </div>
-          <input type="hidden" id="tpsLatitude" name="tpsLatitude" />
-          <input type="hidden" id="tpsLongitude" name="tpsLongitude" />
+          <input type="hidden" id="tpsLatitude" name="tpsLatitude" required />
+          <input type="hidden" id="tpsLongitude" name="tpsLongitude" required />
 
           <label>Foto TPS (opsional)</label>
           <input type="file" id="tpsFoto" name="tpsFoto" accept="image/*" />
 
-          <button type="submit">Tambahkan TPS</button>
-          <button type="button" id="cancelAddTpsBtn" style="background:#999;">Batalkan</button>
+          <button type="submit">✅ Tambahkan TPS</button>
+          <button type="button" id="cancelAddTpsBtn" style="background:#999;">Bersihkan Form</button>
           <p id="addTpsMessage" class="form-message"></p>
         </form>
       </section>
 
+      <!-- Form Laporan Warga Tentang Sampah -->
       <section class="panel">
-        <h2>Form Laporan Warga</h2>
+        <h2>🗑️ Laporan Sampah Warga</h2>
         <form id="reportForm" class="report-form" enctype="multipart/form-data">
-          <label>Nama</label>
+          <label>Nama Pelapor <span style="color:red;">*</span></label>
           <input type="text" id="nama" name="nama" required />
 
-          <label>Nomor WA</label>
+          <label>Nomor WA <span style="color:red;">*</span></label>
           <input type="text" id="nomorWa" name="nomorWa" placeholder="Contoh: 628123456789" required />
 
-          <label>Deskripsi</label>
-          <textarea id="deskripsi" name="deskripsi" rows="3" required></textarea>
+          <label>Deskripsi Masalah Sampah <span style="color:red;">*</span></label>
+          <textarea id="deskripsi" name="deskripsi" rows="3" placeholder="Jelaskan kondisi sampah, lokasi, jenis sampah, dll" required></textarea>
 
+          <label>Ambil Lokasi <span style="color:red;">*</span></label>
           <div class="location-actions">
-            <button type="button" id="useMyLocationBtn">Gunakan lokasi saya</button>
-            <button type="button" id="pickLocationBtn">Pilih lokasi di peta</button>
-            <button type="button" id="addTpsBtn" style="background:#1565C0;">Tambah TPS Baru</button>
+            <button type="button" id="useMyLocationBtn">📍 Gunakan lokasi saya</button>
+            <button type="button" id="pickLocationBtn">🗺️ Pilih di peta</button>
           </div>
 
-          <label>Koordinat lokasi (garis lintang)</label>
+          <label>Koordinat lokasi (garis lintang) <span style="color:red;">*</span></label>
           <input type="text" id="latitude" name="latitude" placeholder="Contoh: -6.4001" required />
 
-          <label>Koordinat lokasi (garis bujur)</label>
+          <label>Koordinat lokasi (garis bujur) <span style="color:red;">*</span></label>
           <input type="text" id="longitude" name="longitude" placeholder="Contoh: 107.4438" required />
           <small class="field-hint">Kalau belum tahu, tekan tombol di atas untuk pakai lokasi Anda atau pilih titik di peta.</small>
+
+          <label>Foto Sampah (opsional)</label>
+          <input type="file" id="foto" name="foto" accept="image/*" />
 
           <label>Foto (opsional)</label>
           <input type="file" id="foto" name="foto" accept="image/*" />

@@ -23,10 +23,10 @@ let map;
 let markers = [];
 let locationPickerMarker = null;
 let reporterPreviewMarker = null;
+let tpsLocationPickerMarker = null;
 let locationPickerActive = false;
+let tpsLocationPickerActive = false;
 let locationPickerMessageTimer = null;
-let addTpsMode = false;
-let addTpsCoords = { lat: null, lng: null };
 
 const defaultTpsPoints = [
   { name: "TPS Pusat Kota", lat: -6.4001, lng: 107.4438, type: "TPS" },
@@ -50,18 +50,37 @@ function initMap() {
   setTimeout(() => map.invalidateSize(), 250);
 
   map.on("click", (event) => {
-    if (!locationPickerActive) return;
     const { lat, lng } = event.latlng;
-    document.getElementById("latitude").value = lat.toFixed(6);
-    document.getElementById("longitude").value = lng.toFixed(6);
-    if (locationPickerMarker) {
-      map.removeLayer(locationPickerMarker);
+
+    // Handle laporan location picker
+    if (locationPickerActive) {
+      document.getElementById("latitude").value = lat.toFixed(6);
+      document.getElementById("longitude").value = lng.toFixed(6);
+      if (locationPickerMarker) {
+        map.removeLayer(locationPickerMarker);
+      }
+      locationPickerMarker = L.marker([lat, lng], {
+        icon: colorIcon("#E65100"),
+      }).addTo(map);
+      showFormMessage("Lokasi laporan dipilih. Silakan kirim laporan.");
+      setLocationPickerState(false);
     }
-    locationPickerMarker = L.marker([lat, lng], {
-      icon: colorIcon("#E65100"),
-    }).addTo(map);
-    showFormMessage("Lokasi dipilih. Silakan kirim laporan.");
-    setLocationPickerState(false);
+
+    // Handle TPS location picker
+    if (tpsLocationPickerActive) {
+      document.getElementById("tpsLatitude").value = lat.toFixed(6);
+      document.getElementById("tpsLongitude").value = lng.toFixed(6);
+      document.getElementById("tpsCoordDisplay").textContent = 
+        `Lokasi TPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      if (tpsLocationPickerMarker) {
+        map.removeLayer(tpsLocationPickerMarker);
+      }
+      tpsLocationPickerMarker = L.marker([lat, lng], {
+        icon: colorIcon("#1565C0", true),
+      }).addTo(map);
+      showTpsMessage("Lokasi TPS dipilih. Silakan isi form dan tambahkan TPS.");
+      setTpsLocationPickerState(false);
+    }
   });
 }
 
@@ -251,15 +270,64 @@ function bindAddTpsForm() {
   const form = document.getElementById("addTpsForm");
   if (!form) return;
 
+  const tpsUseMyLocationBtn = document.getElementById("tpsUseMyLocationBtn");
+  const tpsPickLocationBtn = document.getElementById("tpsPickLocationBtn");
   const cancelBtn = document.getElementById("cancelAddTpsBtn");
 
-  cancelBtn?.addEventListener("click", () => {
-    form.reset();
-    addTpsCoords = { lat: null, lng: null };
-    document.getElementById("tpsCoordDisplay").textContent = "Lokasi akan otomatis diisi dari geolocation Anda";
-    setAddTpsMode(false);
+  // Tombol gunakan lokasi saya
+  tpsUseMyLocationBtn?.addEventListener("click", () => {
+    if (!navigator.geolocation) {
+      showTpsMessage("Browser Anda belum mendukung penentuan lokasi otomatis.", true);
+      return;
+    }
+
+    showTpsMessage("📍 Sedang mencari lokasi Anda...");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+
+        if (accuracy > 150) {
+          showTpsMessage(
+            `Akurasi lokasi masih rendah (${Math.round(accuracy)} m). Coba lagi di tempat terbuka.`,
+            true
+          );
+          return;
+        }
+
+        document.getElementById("tpsLatitude").value = latitude.toFixed(6);
+        document.getElementById("tpsLongitude").value = longitude.toFixed(6);
+        document.getElementById("tpsCoordDisplay").textContent = 
+          `📍 Lokasi Anda: ${latitude.toFixed(4)}, ${longitude.toFixed(4)} (akurasi ${Math.round(accuracy)} m)`;
+        showTpsMessage("✅ Lokasi TPS Anda terdeteksi. Silakan isi nama TPS dan tambahkan.");
+      },
+      (error) => {
+        const messages = {
+          1: "Akses lokasi ditolak. Izinkan akses lokasi di browser Anda.",
+          2: "Sinyal lokasi tidak tersedia saat ini. Coba lagi atau gunakan tombol pilih di peta.",
+          3: "Waktu pencarian lokasi habis. Coba lagi atau gunakan tombol pilih di peta.",
+        };
+        showTpsMessage(messages[error.code] || "Gagal mengambil lokasi.", true);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
   });
 
+  // Tombol pilih di peta
+  tpsPickLocationBtn?.addEventListener("click", () => {
+    setTpsLocationPickerState(!tpsLocationPickerActive);
+    if (tpsLocationPickerActive) {
+      showTpsMessage("🗺️ Klik titik di peta untuk memilih lokasi TPS Anda.");
+    }
+  });
+
+  // Tombol bersihkan form
+  cancelBtn?.addEventListener("click", () => {
+    form.reset();
+    document.getElementById("tpsCoordDisplay").textContent = "Klik salah satu tombol di atas untuk mendapatkan koordinat";
+    showTpsMessage("");
+  });
+
+  // Submit form TPS
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -270,8 +338,7 @@ function bindAddTpsForm() {
     const tpsLng = document.getElementById("tpsLongitude").value.trim();
 
     if (!tpsName || !tpsNomorWa || !tpsLat || !tpsLng) {
-      document.getElementById("addTpsMessage").textContent = "Nama TPS, nomor WA, dan koordinat wajib diisi.";
-      document.getElementById("addTpsMessage").style.color = "#C62828";
+      showTpsMessage("Nama TPS, nomor WA, dan koordinat wajib diisi.", true);
       return;
     }
 
@@ -295,26 +362,21 @@ function bindAddTpsForm() {
       const json = await res.json();
 
       if (!res.ok || !json.ok) {
-        document.getElementById("addTpsMessage").textContent = json.message || "Gagal menambahkan TPS.";
-        document.getElementById("addTpsMessage").style.color = "#C62828";
+        showTpsMessage(json.message || "Gagal menambahkan TPS.", true);
         return;
       }
 
-      document.getElementById("addTpsMessage").textContent = "TPS berhasil ditambahkan! 🎉";
-      document.getElementById("addTpsMessage").style.color = "#2E7D32";
+      showTpsMessage("✅ TPS berhasil ditambahkan! Terima kasih telah melaporkan. 🎉");
       form.reset();
-      addTpsCoords = { lat: null, lng: null };
-      document.getElementById("tpsCoordDisplay").textContent = "Lokasi akan otomatis diisi dari geolocation Anda";
+      document.getElementById("tpsCoordDisplay").textContent = "Klik salah satu tombol di atas untuk mendapatkan koordinat";
 
       // Reload data peta
       setTimeout(() => {
-        setAddTpsMode(false);
         loadReports();
-      }, 1500);
+      }, 2000);
     } catch (err) {
       console.error(err);
-      document.getElementById("addTpsMessage").textContent = "Gagal menambahkan TPS. Coba lagi.";
-      document.getElementById("addTpsMessage").style.color = "#C62828";
+      showTpsMessage("Gagal menambahkan TPS. Coba lagi.", true);
     }
   });
 }
@@ -323,7 +385,7 @@ function setLocationPickerState(active) {
   locationPickerActive = active;
   const pickBtn = document.getElementById("pickLocationBtn");
   if (pickBtn) {
-    pickBtn.textContent = active ? "Klik peta sekarang" : "Pilih lokasi di peta";
+    pickBtn.textContent = active ? "🗺️ Klik peta sekarang" : "🗺️ Pilih lokasi di peta";
     pickBtn.style.background = active ? "#e8f5e9" : "#f1f8e9";
     pickBtn.style.borderColor = active ? "#2e7d32" : "#ccc";
   }
@@ -337,22 +399,24 @@ function setLocationPickerState(active) {
   }
 }
 
-function setAddTpsMode(active) {
-  addTpsMode = active;
-  const panel = document.getElementById("addTpsPanel");
-  const reportPanel = document.getElementById("reportForm")?.parentElement;
-  
-  if (active) {
-    // Tampilkan form tambah TPS
-    if (panel) panel.classList.remove("hidden");
-    if (reportPanel) reportPanel.style.display = "none";
-    showFormMessage("Silakan isi form TPS di atas, atau gunakan tombol geolocation untuk mendapatkan lokasi Anda.");
-  } else {
-    // Sembunyikan form tambah TPS
-    if (panel) panel.classList.add("hidden");
-    if (reportPanel) reportPanel.style.display = "block";
-    showFormMessage("Silakan lanjutkan mengisi form atau kirim laporan.");
+function setTpsLocationPickerState(active) {
+  tpsLocationPickerActive = active;
+  const pickBtn = document.getElementById("tpsPickLocationBtn");
+  if (pickBtn) {
+    pickBtn.textContent = active ? "🗺️ Klik peta sekarang" : "🗺️ Pilih di peta";
+    pickBtn.style.background = active ? "#e8f5e9" : "#f1f8e9";
+    pickBtn.style.borderColor = active ? "#2e7d32" : "#ccc";
   }
+
+  if (!active) {
+    document.getElementById("addTpsMessage").textContent = "";
+  }
+}
+
+function showTpsMessage(message, isError = false) {
+  const el = document.getElementById("addTpsMessage");
+  el.textContent = message;
+  el.style.color = isError ? "#C62828" : "#2E7D32";
 }
 
 function bindReportForm() {
@@ -415,49 +479,8 @@ function bindReportForm() {
   pickLocationBtn?.addEventListener("click", () => {
     setLocationPickerState(!locationPickerActive);
     if (locationPickerActive) {
-      showFormMessage("Klik titik di peta untuk memilih lokasi laporan.");
+      showFormMessage("🗺️ Klik titik di peta untuk memilih lokasi laporan.");
     }
-  });
-
-  addTpsBtn?.addEventListener("click", () => {
-    if (!navigator.geolocation) {
-      showFormMessage("Browser Anda belum mendukung penentuan lokasi otomatis.", true);
-      return;
-    }
-
-    showFormMessage("Sedang mencari lokasi Anda untuk menambah TPS...");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-
-        if (accuracy > 150) {
-          showFormMessage(
-            `Akurasi lokasi masih rendah (${Math.round(accuracy)} m). Coba lagi di tempat terbuka.`,
-            true
-          );
-          return;
-        }
-
-        // Simpan koordinat untuk form TPS
-        addTpsCoords.lat = latitude;
-        addTpsCoords.lng = longitude;
-        document.getElementById("tpsLatitude").value = latitude.toFixed(6);
-        document.getElementById("tpsLongitude").value = longitude.toFixed(6);
-        document.getElementById("tpsCoordDisplay").textContent = 
-          `Lokasi Anda: ${latitude.toFixed(4)}, ${longitude.toFixed(4)} (akurasi ${Math.round(accuracy)} m)`;
-
-        setAddTpsMode(true);
-      },
-      (error) => {
-        const messages = {
-          1: "Akses lokasi ditolak. Izinkan akses lokasi di browser.",
-          2: "Sinyal lokasi tidak tersedia. Coba lagi atau gunakan tombol di peta.",
-          3: "Waktu pencarian lokasi habis. Coba lagi.",
-        };
-        showFormMessage(messages[error.code] || "Gagal mengambil lokasi.", true);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
   });
 
   form.addEventListener("submit", async (e) => {
