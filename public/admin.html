@@ -775,17 +775,33 @@
     }
 
     async function loadReports() {
+      if (!ADMIN_STATE.authenticated) {
+        document.getElementById("reportsList").innerHTML =
+          '<div class="empty-state">Silakan login admin untuk melihat laporan.</div>';
+        return;
+      }
+
       try {
         const res = await fetch("/api/reports", { credentials: "same-origin" });
         const data = await res.json();
 
-        if (!data.ok || !data.data) {
+        if (!data.ok) {
           document.getElementById("reportsList").innerHTML =
             '<div class="empty-state">Tidak ada laporan</div>';
           return;
         }
 
-        const reports = data.data.slice(0, 20); // Show latest 20
+        const legacyReports = Array.isArray(data.data) ? data.data : [];
+        const wargaReports = Array.isArray(data.reports)
+          ? data.reports.map((report) => ({ ...report, sourceType: "Warga" }))
+          : [];
+        const tpsReports = Array.isArray(data.tps)
+          ? data.tps.map((report) => ({ ...report, sourceType: "TPS" }))
+          : [];
+
+        const combinedReports = legacyReports.length > 0 ? legacyReports : [...wargaReports, ...tpsReports];
+        const reports = combinedReports.slice().reverse().slice(0, 50); // Show latest 50
+
         if (reports.length === 0) {
           document.getElementById("reportsList").innerHTML =
             '<div class="empty-state">Tidak ada laporan</div>';
@@ -795,23 +811,32 @@
         const html = reports
           .map(
             (report) => {
+              const isTps = report.sourceType === "TPS" || report.type === "TPS" || report.status === "TPS";
               const photoUrl = resolvePhotoUrl(report.foto);
               const photoHtml = photoUrl 
                 ? `<img src="${photoUrl}" style="width:100%;max-width:300px;border-radius:6px;margin-top:1rem;border:1px solid #ddd"/>`
                 : `<p style="color:#999;font-size:0.9rem;margin-top:0.5rem">Tidak ada foto</p>`;
+
+              const actionsHtml = !isTps
+                ? `
+                    <div class="report-actions">
+                      <button class="btn-sm btn-status" onclick="editReportStatus(${report.rowNumber})">Ubah Status</button>
+                      <button class="btn-sm btn-delete" onclick="deleteReport(${report.rowNumber})">Hapus</button>
+                    </div>
+                  `
+                : `<p style="color:#0f3d1f;font-size:0.9rem;margin-top:0.8rem"><strong>Data TPS:</strong> hanya dapat dilihat di dashboard admin.</p>`;
+
               return `
           <div class="report-item">
             <h3>${report.nama || "-"}</h3>
-            <p><strong>Status:</strong> ${report.status || "Pending"}</p>
+            <p><strong>Tipe:</strong> ${isTps ? "TPS / Bank Sampah" : "Laporan Warga"}</p>
+            <p><strong>Status:</strong> ${isTps ? "TPS Terdaftar" : (report.status || "Belum Ditangani")}</p>
             <p><strong>Deskripsi:</strong> ${report.deskripsi || "-"}</p>
             <p><strong>Lokasi:</strong> ${report.latitude ? `(${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)})` : "-"}</p>
             <p><strong>Tanggal:</strong> ${report.timestamp || "-"}</p>
             <p><strong>No. WA:</strong> ${report.nomorWa || "-"}</p>
             ${photoHtml}
-            <div class="report-actions">
-              <button class="btn-sm btn-status" onclick="editReportStatus(${report.rowNumber})">Ubah Status</button>
-              <button class="btn-sm btn-delete" onclick="deleteReport(${report.rowNumber})">Hapus</button>
-            </div>
+            ${actionsHtml}
           </div>
         `;
             }
@@ -827,7 +852,12 @@
     }
 
     async function editReportStatus(rowNumber) {
-      const status = prompt("Status baru (e.g., Belum Ditangani, Sedang Ditangani, Selesai):");
+      if (!ADMIN_STATE.authenticated) {
+        setAdminMessage("Hanya admin yang bisa mengubah status laporan.", true);
+        return;
+      }
+
+      const status = prompt("Status baru (pilih tepat: Belum Ditangani / Sedang Ditindaklanjuti / Selesai Ditangani):");
       if (!status) return;
 
       try {
@@ -842,7 +872,8 @@
           setAdminMessage("Status laporan berhasil diperbarui");
           loadReports();
         } else {
-          setAdminMessage("Gagal memperbarui status", true);
+          const errData = await res.json().catch(() => ({}));
+          setAdminMessage(errData.message || "Gagal memperbarui status", true);
         }
       } catch (err) {
         console.error("Error updating status:", err);
@@ -851,6 +882,11 @@
     }
 
     async function deleteReport(rowNumber) {
+      if (!ADMIN_STATE.authenticated) {
+        setAdminMessage("Hanya admin yang bisa menghapus laporan.", true);
+        return;
+      }
+
       if (!confirm("Yakin ingin menghapus laporan ini?")) return;
 
       try {
@@ -863,7 +899,8 @@
           setAdminMessage("Laporan berhasil dihapus");
           loadReports();
         } else {
-          setAdminMessage("Gagal menghapus laporan", true);
+          const errData = await res.json().catch(() => ({}));
+          setAdminMessage(errData.message || "Gagal menghapus laporan", true);
         }
       } catch (err) {
         console.error("Error deleting report:", err);
@@ -878,6 +915,7 @@
       if (ADMIN_STATE.authenticated) {
         loginForm.classList.add("hidden");
         dashboard.classList.remove("hidden");
+        loadReports();
       } else {
         loginForm.classList.remove("hidden");
         dashboard.classList.add("hidden");
