@@ -628,40 +628,51 @@ function renderReportList() {
     .forEach((r) => {
       const div = document.createElement("div");
       div.className = "report-item";
-      const cls = STATUS_CLASS[r.status] || "belum";
       const photoUrl = resolvePhotoUrl(r.foto);
-      div.innerHTML = `
-        <strong>${r.nama}</strong> — ${r.timestamp}<br/>
-        ${r.deskripsi}
-        <div class="badge ${cls}">${r.status}</div><br/>
-        ${
-          photoUrl
-            ? `<img src="${photoUrl}" alt="foto laporan"/>`
-            : ""
-        }
-        ${
-          ADMIN_STATE.authenticated
-            ? `
-              <select class="status-select" data-row="${r.rowNumber}">
-                <option ${r.status === "Belum Ditangani" ? "selected" : ""}>Belum Ditangani</option>
-                <option ${r.status === "Sedang Ditindaklanjuti" ? "selected" : ""}>Sedang Ditindaklanjuti</option>
-                <option ${r.status === "Selesai Ditangani" ? "selected" : ""}>Selesai Ditangani</option>
-              </select>
-              <div class="report-actions">
-                <button class="delete-btn" type="button" data-row="${r.rowNumber}">Hapus</button>
-              </div>
-            `
-            : `<p class="field-hint">Warga hanya dapat melihat laporan terbaru.</p>`
-        }
-      `;
+      const isTps = r.type === "TPS" || r.status === "TPS" || currentReportFilter === "tps";
+      const title = r.nama || r.name || (isTps ? "TPS" : "Laporan");
+      const description = r.deskripsi || r.description || "-";
 
-      if (ADMIN_STATE.authenticated) {
-        div.querySelector(".status-select").addEventListener("change", (e) => {
-          updateStatus(r.rowNumber, e.target.value);
-        });
-        div.querySelector(".delete-btn").addEventListener("click", () => {
-          deleteReport(r.rowNumber);
-        });
+      if (isTps) {
+        div.innerHTML = `
+          <strong>${title}</strong> — ${r.timestamp || "-"}<br/>
+          ${description}
+          <div class="badge" style="background:#1565C0;">TPS</div><br/>
+          ${r.nomorWa ? `<small class="field-hint">WA: ${r.nomorWa}</small><br/>` : ""}
+          <small class="field-hint">Koordinat: ${r.latitude}, ${r.longitude}</small><br/>
+          ${photoUrl ? `<img src="${photoUrl}" alt="foto TPS"/>` : ""}
+        `;
+      } else {
+        const cls = STATUS_CLASS[r.status] || "belum";
+        div.innerHTML = `
+          <strong>${title}</strong> — ${r.timestamp}<br/>
+          ${description}
+          <div class="badge ${cls}">${r.status}</div><br/>
+          ${photoUrl ? `<img src="${photoUrl}" alt="foto laporan"/>` : ""}
+          ${
+            ADMIN_STATE.authenticated
+              ? `
+                <select class="status-select" data-row="${r.rowNumber}">
+                  <option ${r.status === "Belum Ditangani" ? "selected" : ""}>Belum Ditangani</option>
+                  <option ${r.status === "Sedang Ditindaklanjuti" ? "selected" : ""}>Sedang Ditindaklanjuti</option>
+                  <option ${r.status === "Selesai Ditangani" ? "selected" : ""}>Selesai Ditangani</option>
+                </select>
+                <div class="report-actions">
+                  <button class="delete-btn" type="button" data-row="${r.rowNumber}">Hapus</button>
+                </div>
+              `
+              : `<p class="field-hint">Warga hanya dapat melihat laporan terbaru.</p>`
+          }
+        `;
+
+        if (ADMIN_STATE.authenticated) {
+          div.querySelector(".status-select").addEventListener("change", (e) => {
+            updateStatus(r.rowNumber, e.target.value);
+          });
+          div.querySelector(".delete-btn").addEventListener("click", () => {
+            deleteReport(r.rowNumber);
+          });
+        }
       }
 
       list.appendChild(div);
@@ -683,8 +694,8 @@ function renderMarkers(reports) {
   ];
 
   allPoints.forEach((item) => {
-    const color = item.status === "TPS" ? "#1565C0" : STATUS_COLOR[item.status] || "#C62828";
-    const isTrashMarker = item.status === "TPS";
+    const isTrashMarker = item.type === "TPS" || item.status === "TPS";
+    const color = isTrashMarker ? "#1565C0" : STATUS_COLOR[item.status] || "#C62828";
 
     const marker = isTrashMarker
       ? L.marker([item.latitude || item.lat, item.longitude || item.lng], {
@@ -723,7 +734,7 @@ async function loadReports() {
     
     // For markers and stats, show both
     const allData = [...allReports, ...allTps];
-    renderStats(allData);
+    renderStats(allReports);
     renderReportList();  // Filtered based on currentReportFilter
     renderMarkers(allData);
   } catch (err) {

@@ -266,10 +266,14 @@ app.get("/api/reports", async (req, res) => {
       tps: tpsPoints
     });
   } catch (err) {
-    console.error(err);
-    res
-      .status(500)
-      .json({ ok: false, message: "Gagal mengambil data dari Google Sheets. Cek konfigurasi .env dan credentials.json." });
+    console.warn("[server] /api/reports fallback ke data kosong:", err.message);
+    res.json({
+      ok: true,
+      desa: process.env.NAMA_DESA || "Desa",
+      reports: [],
+      tps: [],
+      message: "Data sementara tidak tersedia. Cek koneksi internet/DNS ke Google API.",
+    });
   }
 });
 
@@ -279,8 +283,8 @@ app.get("/api/tps", async (req, res) => {
     const tps = await getAllTps();
     res.json({ ok: true, data: tps });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ ok: false, message: "Gagal mengambil data TPS." });
+    console.warn("[server] /api/tps fallback ke data kosong:", err.message);
+    res.json({ ok: true, data: [], message: "Data TPS sementara tidak tersedia." });
   }
 });
 

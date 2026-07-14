@@ -158,34 +158,39 @@ async function appendReport({
 
 // Ambil semua laporan (dipakai dashboard/peta)
 async function getAllReports() {
-  const sheets = await getSheetsClient();
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_NAME}!A2:H`,
-  });
+  try {
+    const sheets = await getSheetsClient();
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_NAME}!A2:H`,
+    });
 
-  const parseCoordinate = (value) => {
-    if (typeof value === "number") return value;
-    if (value === undefined || value === null) return NaN;
+    const parseCoordinate = (value) => {
+      if (typeof value === "number") return value;
+      if (value === undefined || value === null) return NaN;
 
-    const normalized = String(value).trim().replace(/\s+/g, "").replace(",", ".");
-    return parseFloat(normalized);
-  };
+      const normalized = String(value).trim().replace(/\s+/g, "").replace(",", ".");
+      return parseFloat(normalized);
+    };
 
-  const rows = res.data.values || [];
-  return rows
-    .map((r, idx) => ({
-      rowNumber: idx + 2, // baris asli di sheet (buat update status nanti)
-      timestamp: r[0] || "",
-      nomorWa: r[1] || "",
-      nama: r[2] || "",
-      deskripsi: r[3] || "",
-      latitude: parseCoordinate(r[4]),
-      longitude: parseCoordinate(r[5]),
-      status: r[6] || "Belum Ditangani",
-      foto: r[7] || "",
-    }))
-    .filter((r) => !isNaN(r.latitude) && !isNaN(r.longitude) && r.status !== "Dihapus");
+    const rows = res.data.values || [];
+    return rows
+      .map((r, idx) => ({
+        rowNumber: idx + 2, // baris asli di sheet (buat update status nanti)
+        timestamp: r[0] || "",
+        nomorWa: r[1] || "",
+        nama: r[2] || "",
+        deskripsi: r[3] || "",
+        latitude: parseCoordinate(r[4]),
+        longitude: parseCoordinate(r[5]),
+        status: r[6] || "Belum Ditangani",
+        foto: r[7] || "",
+      }))
+      .filter((r) => !isNaN(r.latitude) && !isNaN(r.longitude) && r.status !== "Dihapus");
+  } catch (err) {
+    console.warn("[sheets] Gagal ambil laporan:", err.message);
+    return [];
+  }
 }
 
 // Update status laporan (dipakai dashboard, opsional/lanjutan)
@@ -279,10 +284,12 @@ async function getAllTps() {
         timestamp: r[0] || "",
         nomorWa: r[1] || "",
         name: r[2] || "TPS",
+        nama: r[2] || "TPS",
         deskripsi: r[3] || "",
         latitude: parseCoordinate(r[4]),
         longitude: parseCoordinate(r[5]),
         foto: r[6] || "",
+        status: "TPS",
         type: "TPS",
       }))
       .filter((r) => !isNaN(r.latitude) && !isNaN(r.longitude));
