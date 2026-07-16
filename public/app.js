@@ -2,6 +2,67 @@
 // Frontend dashboard: ambil data laporan dari API, render peta Leaflet + sidebar
 // KKN 2026 - Fajar Arief Rezky - 23416255201230 - IF23E
 
+// === Utility Functions untuk Micro-Interactions ===
+function showNotification(message, type = "success", duration = 3000) {
+  const notification = document.createElement("div");
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === "success" ? "#2e9d56" : "#E63946"};
+    color: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.4s ease-out;
+    z-index: 1000;
+    font-weight: 600;
+    max-width: 300px;
+  `;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = "slideOutRight 0.4s ease-out forwards";
+    setTimeout(() => notification.remove(), 400);
+  }, duration);
+}
+
+function animateElement(element, animation = "pulse") {
+  if (!element) return;
+  element.style.animation = `${animation} 0.6s ease-out`;
+  setTimeout(() => {
+    element.style.animation = "";
+  }, 600);
+}
+
+function addRippleEffect(event) {
+  const button = event.currentTarget;
+  const ripple = document.createElement("span");
+  const rect = button.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const x = event.clientX - rect.left - size / 2;
+  const y = event.clientY - rect.top - size / 2;
+  
+  ripple.style.cssText = `
+    position: absolute;
+    width: ${size}px;
+    height: ${size}px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    left: ${x}px;
+    top: ${y}px;
+    pointer-events: none;
+    animation: ripple 0.6s ease-out;
+  `;
+  
+  button.style.position = "relative";
+  button.style.overflow = "hidden";
+  button.appendChild(ripple);
+  
+  setTimeout(() => ripple.remove(), 600);
+}
+
 const STATUS_COLOR = {
   "Belum Ditangani": "#C62828",
   "Sedang Ditindaklanjuti": "#F57C00",
@@ -228,21 +289,17 @@ function switchTab(tabName) {
     tpsPanel.style.display = "block";
     reportPanel.style.display = "none";
     
-    // Update button style
-    tabTpsBtn.style.background = "#1565C0";
-    tabTpsBtn.style.color = "white";
-    tabReportBtn.style.background = "#ddd";
-    tabReportBtn.style.color = "#333";
+    // Update button class
+    tabTpsBtn.classList.add("active");
+    tabReportBtn.classList.remove("active");
   } else {
     // Tampilkan laporan form, sembunyikan TPS
     tpsPanel.style.display = "none";
     reportPanel.style.display = "block";
     
-    // Update button style
-    tabTpsBtn.style.background = "#ddd";
-    tabTpsBtn.style.color = "#333";
-    tabReportBtn.style.background = "#2E7D32";
-    tabReportBtn.style.color = "white";
+    // Update button class
+    tabTpsBtn.classList.remove("active");
+    tabReportBtn.classList.add("active");
   }
 }
 
@@ -252,15 +309,11 @@ function switchReportFilter(filterType) {
   const tabTpsBtn = document.getElementById("tabLaporanTps");
   
   if (filterType === "warga") {
-    tabWargaBtn.style.background = "#2E7D32";
-    tabWargaBtn.style.color = "white";
-    tabTpsBtn.style.background = "#ddd";
-    tabTpsBtn.style.color = "#333";
+    tabWargaBtn.classList.add("active");
+    tabTpsBtn.classList.remove("active");
   } else {
-    tabWargaBtn.style.background = "#ddd";
-    tabWargaBtn.style.color = "#333";
-    tabTpsBtn.style.background = "#1565C0";
-    tabTpsBtn.style.color = "white";
+    tabWargaBtn.classList.remove("active");
+    tabTpsBtn.classList.add("active");
   }
   
   renderReportList();

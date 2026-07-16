@@ -450,6 +450,102 @@
       color: #155724;
     }
 
+    /* === Enhanced Interactive Elements === */
+    .btn-sm {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-sm::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+      pointer-events: none;
+    }
+
+    .btn-sm:active::after {
+      width: 300px;
+      height: 300px;
+    }
+
+    .report-item {
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .report-item:nth-child(1) { animation-delay: 0s; }
+    .report-item:nth-child(2) { animation-delay: 0.1s; }
+    .report-item:nth-child(3) { animation-delay: 0.2s; }
+    .report-item:nth-child(n+4) { animation-delay: 0.3s; }
+
+    /* Smooth scroll behavior for entire page */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Enhanced report item interactivity */
+    .report-item img {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: zoom-in;
+    }
+
+    .report-item:hover img {
+      filter: brightness(1.05) contrast(1.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .status-badge {
+      animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    @keyframes popIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Loader animation for loading state */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
     @media (max-width: 768px) {
       body {
         font-size: 14px;

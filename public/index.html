@@ -26,11 +26,11 @@
     <div id="map"></div>
     <aside id="sidebar">
       <!-- Tab Buttons untuk switch antara form TPS dan Laporan -->
-      <div style="display:flex;gap:8px;padding:12px;background:#f0f0f0;border-radius:6px;margin-bottom:12px;">
-        <button id="tabTpsBtn" type="button" style="flex:1;padding:10px;background:#1565C0;color:white;border:none;border-radius:4px;font-weight:bold;cursor:pointer;">
+      <div class="tab-buttons">
+        <button id="tabTpsBtn" class="tab-button active" type="button">
           📍 Tambah TPS
         </button>
-        <button id="tabReportBtn" type="button" style="flex:1;padding:10px;background:#ddd;color:#333;border:none;border-radius:4px;font-weight:bold;cursor:pointer;">
+        <button id="tabReportBtn" class="tab-button" type="button">
           🗑️ Laporan Sampah
         </button>
       </div>
@@ -108,9 +108,9 @@
         <h2>Daftar Laporan Terbaru</h2>
         
         <!-- Filter tabs untuk laporan warga vs TPS -->
-        <div style="display:flex; gap:10px; margin-bottom:15px; border-bottom:2px solid #ddd; padding-bottom:10px;">
-          <button id="tabLaporanWarga" type="button" style="flex:1; padding:10px; background:#2E7D32; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size:13px;">📋 Laporan Warga</button>
-          <button id="tabLaporanTps" type="button" style="flex:1; padding:10px; background:#ddd; color:#333; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size:13px;">📍 Laporan TPS</button>
+        <div class="tab-buttons">
+          <button id="tabLaporanWarga" class="tab-button active" type="button">📋 Laporan Warga</button>
+          <button id="tabLaporanTps" class="tab-button" type="button">📍 Laporan TPS</button>
         </div>
         
         <div class="admin-panel" id="adminPanel">

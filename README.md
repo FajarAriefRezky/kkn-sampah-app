@@ -154,6 +154,8 @@ Laporan yang masuk (foto + lokasi) otomatis:
 Perangkat desa bisa buka dashboard, klik titik di peta atau ubah dropdown status di sidebar
 jadi "Sedang Ditindaklanjuti" / "Selesai Ditangani" — warna titik di peta ikut berubah.
 
+Di sidebar utama juga ada tab **Laporan Warga** dan **Laporan TPS** supaya daftar bisa difilter sesuai jenis data.
+
 ---
 
 ## 5. Struktur Folder
