@@ -33,7 +33,8 @@ const IS_CLOUD_ENV = Boolean(
     process.env.RENDER ||
     process.env.FLY_APP_NAME ||
     process.env.K_SERVICE ||
-    process.env.HEROKU
+    process.env.HEROKU ||
+    process.env.VERCEL
 );
 const FORCE_LOCAL_HTTPS = process.env.FORCE_LOCAL_HTTPS === "1";
 const RUN_LOCAL_HTTPS = !IS_CLOUD_ENV || FORCE_LOCAL_HTTPS;
@@ -415,22 +416,45 @@ function ensureHttpsCertificate() {
   return { key: pems.private, cert: pems.cert };
 }
 
-(async () => {
-  const localIp = getLocalIp();
-  const httpsPortText = PORT === 443 ? "" : `:${PORT}`;
-  const httpPortText = HTTP_PORT === 80 ? "" : `:${HTTP_PORT}`;
+// Export app for Vercel serverless (must be before listen())
+module.exports = app;
 
-  if (RUN_LOCAL_HTTPS) {
-    const ssl = ensureHttpsCertificate();
+// Only start server when NOT running on Vercel (local or other cloud platforms)
+if (!process.env.VERCEL) {
+  (async () => {
+    const localIp = getLocalIp();
+    const httpsPortText = PORT === 443 ? "" : `:${PORT}`;
+    const httpPortText = HTTP_PORT === 80 ? "" : `:${HTTP_PORT}`;
 
-    https.createServer({ key: ssl.key, cert: ssl.cert }, app).listen(PORT, HOST, async () => {
-      console.log(`[server] Dashboard HTTPS jalan di https://${HTTPS_HOST}${httpsPortText}`);
-      console.log(`[server] Juga tersedia di https://localhost${httpsPortText}`);
-      console.log(`[server] Bisa diakses dari perangkat lain di https://${localIp}${httpsPortText}`);
+    if (RUN_LOCAL_HTTPS) {
+      const ssl = ensureHttpsCertificate();
 
+      https.createServer({ key: ssl.key, cert: ssl.cert }, app).listen(PORT, HOST, async () => {
+        console.log(`[server] Dashboard HTTPS jalan di https://${HTTPS_HOST}${httpsPortText}`);
+        console.log(`[server] Juga tersedia di https://localhost${httpsPortText}`);
+        console.log(`[server] Bisa diakses dari perangkat lain di https://${localIp}${httpsPortText}`);
+
+        if (RUN_HTTP_FALLBACK && HTTP_PORT !== PORT) {
+          console.log(`[server] Akses HP (tanpa warning sertifikat): http://${localIp}${httpPortText}`);
+        }
+
+        try {
+          await ensureHeader();
+        } catch (err) {
+          console.error("[server] Gagal cek header Google Sheet:", err.message);
+        }
+      });
+
+      // HTTP fallback untuk akses mobile LAN yang biasanya tidak menerima self-signed cert.
       if (RUN_HTTP_FALLBACK && HTTP_PORT !== PORT) {
-        console.log(`[server] Akses HP (tanpa warning sertifikat): http://${localIp}${httpPortText}`);
+        http.createServer(app).listen(HTTP_PORT, HOST);
       }
+      return;
+    }
+
+    // Mode cloud: platform sudah menangani HTTPS di edge, aplikasi cukup HTTP pada PORT.
+    http.createServer(app).listen(PORT, HOST, async () => {
+      console.log(`[server] Cloud mode aktif di http://${HOST}:${PORT}`);
 
       try {
         await ensureHeader();
@@ -438,22 +462,5 @@ function ensureHttpsCertificate() {
         console.error("[server] Gagal cek header Google Sheet:", err.message);
       }
     });
-
-    // HTTP fallback untuk akses mobile LAN yang biasanya tidak menerima self-signed cert.
-    if (RUN_HTTP_FALLBACK && HTTP_PORT !== PORT) {
-      http.createServer(app).listen(HTTP_PORT, HOST);
-    }
-    return;
-  }
-
-  // Mode cloud: platform sudah menangani HTTPS di edge, aplikasi cukup HTTP pada PORT.
-  http.createServer(app).listen(PORT, HOST, async () => {
-    console.log(`[server] Cloud mode aktif di http://${HOST}:${PORT}`);
-
-    try {
-      await ensureHeader();
-    } catch (err) {
-      console.error("[server] Gagal cek header Google Sheet:", err.message);
-    }
-  });
-})();
+  })();
+}
