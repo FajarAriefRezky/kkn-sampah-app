@@ -55,8 +55,8 @@
           </div>
 
           <label>Koordinat lokasi</label>
-          <div style="background:#f0f0f0;padding:8px;border-radius:4px;font-size:0.9rem;">
-            <p id="tpsCoordDisplay" style="margin:4px 0;color:#666;">Klik salah satu tombol di atas untuk mendapatkan koordinat</p>
+          <div class="coord-display">
+            <p id="tpsCoordDisplay">Klik salah satu tombol di atas untuk mendapatkan koordinat</p>
           </div>
           <input type="hidden" id="tpsLatitude" name="tpsLatitude" required />
           <input type="hidden" id="tpsLongitude" name="tpsLongitude" required />
@@ -65,7 +65,7 @@
           <input type="file" id="tpsFoto" name="tpsFoto" accept="image/*" />
 
           <button type="submit">✅ Tambahkan TPS</button>
-          <button type="button" id="cancelAddTpsBtn" style="background:#999;">Bersihkan Form</button>
+          <button type="button" id="cancelAddTpsBtn" class="btn-secondary">🗑 Bersihkan Form</button>
           <p id="addTpsMessage" class="form-message"></p>
         </form>
       </section>

@@ -713,6 +713,163 @@
         padding: 1.5rem 1rem;
       }
     }
+
+    /* ===== EXTRA ENHANCEMENTS ===== */
+    .dashboard-sidebar {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dashboard-sidebar h2 {
+      background: rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      padding: 1.2rem 1.5rem !important;
+      margin: 0 0 0.5rem 0 !important;
+      letter-spacing: 0.3px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.45);
+      font-size: 0.78rem;
+      line-height: 1.7;
+    }
+
+    .dashboard-header {
+      background: linear-gradient(135deg, #ffffff, #f8fffe);
+      border-bottom: 2px solid #e8f5e9;
+    }
+
+    .dashboard-header h1 {
+      background: linear-gradient(135deg, #1f5f2b, #3a9d56);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .report-item {
+      animation: slideUpFade 0.35s ease-out both;
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .report-item:nth-child(odd)  { animation-delay: 0.05s; }
+    .report-item:nth-child(even) { animation-delay: 0.10s; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .status-badge.pending  { background: #fff3cd; color: #856404; }
+    .status-badge.process  { background: #fff0e0; color: #b45309; }
+    .status-badge.done     { background: #d4edda; color: #155724; }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .section-header h2 { margin: 0; }
+
+    .refresh-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.35s;
+      font-family: inherit;
+    }
+    .refresh-btn:hover {
+      border-color: #1f5f2b;
+      transform: rotate(180deg);
+      box-shadow: 0 4px 12px rgba(31,95,43,0.15);
+    }
+
+    .status-select-admin {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      font-size: 0.9rem;
+      font-family: inherit;
+      font-weight: 600;
+      background: white;
+      color: #2d3436;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-bottom: 8px;
+    }
+    .status-select-admin:focus {
+      outline: none;
+      border-color: #1f5f2b;
+      box-shadow: 0 0 0 3px rgba(31,95,43,0.12);
+    }
+    .status-select-admin:hover { border-color: #a0c4a8; }
+
+    .report-actions { display: flex; flex-direction: column; gap: 6px; }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 12px 12px;
+    }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      color: rgba(255,255,255,0.70);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .sidebar-nav-item:hover { background: rgba(255,255,255,0.12); color: white; }
+    .sidebar-nav-item.active { background: rgba(255,255,255,0.18); color: white; }
+
+    #sidebarStats { padding: 0 4px; margin-top: 8px; }
+
+    .sidebar-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.65);
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .sidebar-stat-row:hover { background: rgba(255,255,255,0.08); }
+    .sstat-val { font-weight: 800; color: white; font-size: 0.95rem; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .status-badge.pending { background: #ffebee; color: #c62828; }
+    .status-badge.process { background: #fff3e0; color: #e65100; }
+    .status-badge.done    { background: #e8f5e9; color: #2e7d32; }
   </style>
 </head>
 <body>
@@ -757,17 +914,37 @@
 
     <div id="dashboard" class="dashboard-container hidden">
       <div class="dashboard-sidebar">
-        <h2>📊 Menu</h2>
+        <h2>📊 Dashboard</h2>
+        <nav class="sidebar-nav">
+          <a class="sidebar-nav-item active" href="#">
+            <span>📋</span> Laporan
+          </a>
+          <a class="sidebar-nav-item" href="/" target="_blank">
+            <span>🗺️</span> Peta Publik
+          </a>
+        </nav>
+        <div id="sidebarStats"></div>
+        <div class="sidebar-footer">
+          <small>KKN Sampah 2026</small><br/>
+          <small>Fajar Arief Rezky</small>
+        </div>
       </div>
       <div class="dashboard-main">
         <div class="dashboard-header">
-          <h1>Admin Dashboard</h1>
-          <button id="logoutBtn" class="logout-btn">Logout</button>
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p style="margin:2px 0 0;color:#888;font-size:0.88rem;">Kelola laporan sampah desa</p>
+          </div>
+          <button id="logoutBtn" class="logout-btn">🚪 Logout</button>
         </div>
 
         <div class="dashboard-content">
+          <div id="dashboardStats" class="dashboard-stats-bar"></div>
           <div class="dashboard-section">
-            <h2>Laporan Terbaru</h2>
+            <div class="section-header">
+              <h2>📋 Laporan Terbaru</h2>
+              <button class="refresh-btn" onclick="loadReports()" title="Refresh data">🔄</button>
+            </div>
             <div id="reportsList" class="reports-list">
               <div class="empty-state">Memuat laporan...</div>
             </div>
@@ -898,6 +1075,33 @@
         const combinedReports = legacyReports.length > 0 ? legacyReports : [...wargaReports, ...tpsReports];
         const reports = combinedReports.slice().reverse().slice(0, 50); // Show latest 50
 
+        // Update stats bars
+        const allData = legacyReports.length > 0 ? legacyReports : [...wargaReports, ...tpsReports];
+        const cntBelum   = allData.filter(r => r.status === "Belum Ditangani").length;
+        const cntProses  = allData.filter(r => r.status === "Sedang Ditindaklanjuti").length;
+        const cntSelesai = allData.filter(r => r.status === "Selesai Ditangani").length;
+        const cntTps     = tpsReports.length;
+
+        const statsEl = document.getElementById("dashboardStats");
+        if (statsEl) {
+          statsEl.innerHTML = `
+            <div class="dash-stat dash-total"><span>${allData.length}</span><small>Total</small></div>
+            <div class="dash-stat dash-belum"><span>${cntBelum}</span><small>Belum Ditangani</small></div>
+            <div class="dash-stat dash-proses"><span>${cntProses}</span><small>Sedang Ditangani</small></div>
+            <div class="dash-stat dash-selesai"><span>${cntSelesai}</span><small>Selesai</small></div>
+            <div class="dash-stat dash-tps"><span>${cntTps}</span><small>Titik TPS</small></div>
+          `;
+        }
+        const sidebarStatsEl = document.getElementById("sidebarStats");
+        if (sidebarStatsEl) {
+          sidebarStatsEl.innerHTML = `
+            <div class="sidebar-stat-row"><span class="sstat-label">📋 Total</span><span class="sstat-val">${allData.length}</span></div>
+            <div class="sidebar-stat-row"><span class="sstat-label">🔴 Belum</span><span class="sstat-val">${cntBelum}</span></div>
+            <div class="sidebar-stat-row"><span class="sstat-label">🟠 Proses</span><span class="sstat-val">${cntProses}</span></div>
+            <div class="sidebar-stat-row"><span class="sstat-label">🟢 Selesai</span><span class="sstat-val">${cntSelesai}</span></div>
+          `;
+        }
+
         if (reports.length === 0) {
           document.getElementById("reportsList").innerHTML =
             '<div class="empty-state">Tidak ada laporan</div>';
@@ -913,24 +1117,30 @@
                 ? `<img src="${photoUrl}" style="width:100%;max-width:300px;border-radius:6px;margin-top:1rem;border:1px solid #ddd"/>`
                 : `<p style="color:#999;font-size:0.9rem;margin-top:0.5rem">Tidak ada foto</p>`;
 
+              const statusClass = report.status === 'Selesai Ditangani' ? 'done'
+                : report.status === 'Sedang Ditindaklanjuti' ? 'process' : 'pending';
               const actionsHtml = !isTps
                 ? `
                     <div class="report-actions">
-                      <button class="btn-sm btn-status" onclick="editReportStatus(${report.rowNumber})">Ubah Status</button>
-                      <button class="btn-sm btn-delete" onclick="deleteReport(${report.rowNumber})">Hapus</button>
+                      <select class="status-select-admin" data-row="${report.rowNumber}" onchange="updateReportStatus(this)">
+                        <option ${(!report.status || report.status === 'Belum Ditangani') ? 'selected' : ''}>Belum Ditangani</option>
+                        <option ${report.status === 'Sedang Ditindaklanjuti' ? 'selected' : ''}>Sedang Ditindaklanjuti</option>
+                        <option ${report.status === 'Selesai Ditangani' ? 'selected' : ''}>Selesai Ditangani</option>
+                      </select>
+                      <button class="btn-sm btn-delete" onclick="deleteReport(${report.rowNumber})">🗑️ Hapus</button>
                     </div>
                   `
-                : `<p style="color:#0f3d1f;font-size:0.9rem;margin-top:0.8rem"><strong>Data TPS:</strong> hanya dapat dilihat di dashboard admin.</p>`;
+                : `<p style="color:#1565C0;font-size:0.88rem;margin-top:0.6rem">📍 <strong>Titik TPS</strong> — dapat dilihat di peta publik.</p>`;
 
               return `
           <div class="report-item">
             <h3>${report.nama || "-"}</h3>
-            <p><strong>Tipe:</strong> ${isTps ? "TPS / Bank Sampah" : "Laporan Warga"}</p>
-            <p><strong>Status:</strong> ${isTps ? "TPS Terdaftar" : (report.status || "Belum Ditangani")}</p>
+            <p><strong>Tipe:</strong> ${isTps ? "📍 TPS / Bank Sampah" : "👤 Laporan Warga"}</p>
+            <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${isTps ? "TPS Terdaftar" : (report.status || "Belum Ditangani")}</span></p>
             <p><strong>Deskripsi:</strong> ${report.deskripsi || "-"}</p>
-            <p><strong>Lokasi:</strong> ${report.latitude ? `(${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)})` : "-"}</p>
-            <p><strong>Tanggal:</strong> ${report.timestamp || "-"}</p>
-            <p><strong>No. WA:</strong> ${report.nomorWa || "-"}</p>
+            <p><strong>Lokasi:</strong> ${report.latitude ? `📌 (${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)})` : "-"}</p>
+            <p><strong>Tanggal:</strong> 🕐 ${report.timestamp || "-"}</p>
+            <p><strong>No. WA:</strong> 📞 ${report.nomorWa || "-"}</p>
             ${photoHtml}
             ${actionsHtml}
           </div>
@@ -947,15 +1157,9 @@
       }
     }
 
-    async function editReportStatus(rowNumber) {
-      if (!ADMIN_STATE.authenticated) {
-        setAdminMessage("Hanya admin yang bisa mengubah status laporan.", true);
-        return;
-      }
-
-      const status = prompt("Status baru (pilih tepat: Belum Ditangani / Sedang Ditindaklanjuti / Selesai Ditangani):");
-      if (!status) return;
-
+    async function updateReportStatus(selectEl) {
+      const rowNumber = selectEl.dataset.row;
+      const status = selectEl.value;
       try {
         const res = await fetch(`/api/reports/${rowNumber}/status`, {
           method: "POST",
@@ -963,13 +1167,13 @@
           credentials: "same-origin",
           body: JSON.stringify({ status }),
         });
-
         if (res.ok) {
-          setAdminMessage("Status laporan berhasil diperbarui");
+          setAdminMessage("✅ Status laporan berhasil diperbarui");
           loadReports();
         } else {
           const errData = await res.json().catch(() => ({}));
           setAdminMessage(errData.message || "Gagal memperbarui status", true);
+          loadReports();
         }
       } catch (err) {
         console.error("Error updating status:", err);

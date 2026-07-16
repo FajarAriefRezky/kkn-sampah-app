@@ -680,9 +680,9 @@ function renderReportList() {
     .reverse()
     .forEach((r) => {
       const div = document.createElement("div");
-      div.className = "report-item";
-      const photoUrl = resolvePhotoUrl(r.foto);
       const isTps = r.type === "TPS" || r.status === "TPS" || currentReportFilter === "tps";
+      div.className = "report-item" + (isTps ? " tps-item" : "");
+      const photoUrl = resolvePhotoUrl(r.foto);
       const title = r.nama || r.name || (isTps ? "TPS" : "Laporan");
       const description = r.deskripsi || r.description || "-";
 
@@ -690,9 +690,9 @@ function renderReportList() {
         div.innerHTML = `
           <strong>${title}</strong> — ${r.timestamp || "-"}<br/>
           ${description}
-          <div class="badge" style="background:#1565C0;">TPS</div><br/>
-          ${r.nomorWa ? `<small class="field-hint">WA: ${r.nomorWa}</small><br/>` : ""}
-          <small class="field-hint">Koordinat: ${r.latitude}, ${r.longitude}</small><br/>
+          <div class="badge" style="background:linear-gradient(135deg,#1565C0,#1976D2);">📍 TPS</div><br/>
+          ${r.nomorWa ? `<small class="field-hint">📞 WA: ${r.nomorWa}</small><br/>` : ""}
+          <small class="field-hint">📌 Koordinat: ${r.latitude}, ${r.longitude}</small><br/>
           ${photoUrl ? `<img src="${photoUrl}" alt="foto TPS"/>` : ""}
         `;
       } else {

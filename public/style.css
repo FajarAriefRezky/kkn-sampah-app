@@ -921,3 +921,366 @@ footer:hover {
     transform: scale(1);
   }
 }
+
+/* ===== TAB SWITCHER (Peta Sidebar) ===== */
+.tab-switcher {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid #e8f5e9;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 8px;
+  background: transparent;
+  color: #999;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: inherit;
+  letter-spacing: 0.2px;
+}
+
+.tab-btn:hover:not(.active-tps):not(.active-report) {
+  background: #f5f5f5;
+  color: #555;
+  border-color: #e0e0e0;
+}
+
+.tab-btn.active-tps {
+  background: linear-gradient(135deg, #1565C0, #1976D2);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(21, 101, 192, 0.40);
+  transform: translateY(-2px);
+}
+
+.tab-btn.active-report {
+  background: linear-gradient(135deg, #1f5f2b, #2e9d56);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(31, 95, 43, 0.40);
+  transform: translateY(-2px);
+}
+
+/* ===== FILTER TABS (Daftar Laporan) ===== */
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  background: #ebebeb;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.filter-tab {
+  flex: 1;
+  padding: 8px 6px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  color: #888;
+  font-family: inherit;
+}
+
+.filter-tab:hover:not(.active-warga):not(.active-tps-list) {
+  background: rgba(255, 255, 255, 0.65);
+  color: #444;
+}
+
+.filter-tab.active-warga {
+  background: white;
+  color: #1f5f2b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.filter-tab.active-tps-list {
+  background: white;
+  color: #1565C0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== COORD DISPLAY ===== */
+.coord-display {
+  background: linear-gradient(135deg, #f5f5f5, #eeeeee);
+  border: 1.5px solid #e0e0e0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.coord-display.has-coord {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  border-color: #81c784;
+  color: #1B5E20;
+  font-weight: 600;
+}
+
+.coord-display p { margin: 0; }
+
+/* ===== SECONDARY BUTTON ===== */
+.btn-secondary {
+  background: #f0f0f0 !important;
+  color: #555 !important;
+  border: 1.5px solid #d5d5d5 !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+.btn-secondary:hover {
+  background: #e5e5e5 !important;
+  border-color: #bbb !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10) !important;
+}
+
+/* ===== REPORT-ITEM TPS VARIANT ===== */
+.report-item.tps-item {
+  border-left: 4px solid #1565C0 !important;
+}
+
+.report-item.tps-item:hover {
+  border-left-color: #1976D2 !important;
+}
+
+/* ===== ADMIN DASHBOARD STATS BAR ===== */
+.dashboard-stats-bar {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.dash-stat {
+  flex: 1;
+  min-width: 120px;
+  background: white;
+  border-radius: 14px;
+  padding: 18px 20px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-top: 4px solid #ccc;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
+  cursor: default;
+}
+
+.dash-stat:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
+.dash-stat span {
+  display: block;
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 6px;
+  animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+.dash-stat small {
+  font-size: 0.75rem;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.dash-total  { border-top-color: #1f5f2b; }
+.dash-total span { color: #1f5f2b; }
+.dash-belum  { border-top-color: #E63946; }
+.dash-belum span { color: #E63946; }
+.dash-proses { border-top-color: #FF9800; }
+.dash-proses span { color: #FF9800; }
+.dash-selesai{ border-top-color: #2e9d56; }
+.dash-selesai span { color: #2e9d56; }
+.dash-tps    { border-top-color: #1565C0; }
+.dash-tps span { color: #1565C0; }
+
+/* ===== ADMIN SIDEBAR NAV ===== */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 12px;
+  margin-bottom: 20px;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.sidebar-nav-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.sidebar-nav-item.active {
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+}
+
+.sidebar-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 16px;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.75);
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.sidebar-stat-row:hover { background: rgba(255,255,255,0.08); }
+.sstat-val { font-weight: 800; color: white; font-size: 1rem; }
+
+.sidebar-footer {
+  padding: 16px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.6;
+}
+
+/* ===== SECTION HEADER ===== */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 { margin: 0; }
+
+.refresh-btn {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+  border-color: var(--green);
+  transform: rotate(180deg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ===== STATUS SELECT (admin dashboard) ===== */
+.status-select-admin {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 600;
+  background: white;
+  color: #2d3436;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin-bottom: 8px;
+}
+
+.status-select-admin:focus {
+  outline: none;
+  border-color: #1f5f2b;
+  box-shadow: 0 0 0 3px rgba(31, 95, 43, 0.12);
+}
+
+/* ===== POPOUT ANIM ===== */
+@keyframes popIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* ===== ENTRANCE ANIMATIONS ===== */
+.report-item {
+  animation: slideInFromLeft 0.35s cubic-bezier(0.25,0.46,0.45,0.94) both;
+}
+
+@keyframes slideInFromLeft {
+  from { transform: translateX(-20px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+/* stagger delay for report items */
+.report-item:nth-child(1)  { animation-delay: 0.03s; }
+.report-item:nth-child(2)  { animation-delay: 0.06s; }
+.report-item:nth-child(3)  { animation-delay: 0.09s; }
+.report-item:nth-child(4)  { animation-delay: 0.12s; }
+.report-item:nth-child(5)  { animation-delay: 0.15s; }
+.report-item:nth-child(n+6){ animation-delay: 0.18s; }
+
+/* Floating pulse on active markers (leaflet) */
+.leaflet-marker-pulsing {
+  animation: markerPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes markerPulse {
+  0%, 100% { transform: scale(1);    filter: brightness(1); }
+  50%       { transform: scale(1.15); filter: brightness(1.15); }
+}
+
+/* Spinner loading state */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+/* Stat card number count-up shimmer */
+.dash-stat span {
+  position: relative;
+}
+
+.dash-stat span::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%);
+  animation: shimmer 1.8s ease 0.3s 1;
+  opacity: 0;
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); opacity: 1; }
+  100% { transform: translateX(100%);  opacity: 0; }
+}
