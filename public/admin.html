@@ -28,7 +28,7 @@
       align-items: center;
       padding: 1.5rem;
       position: relative;
-      background: linear-gradient(135deg, #0a2e14 0%, #1a5c2e 30%, #0d3b1e 60%, #061a0c 100%);
+      background: linear-gradient(135deg, #0c1219 0%, #12253a 30%, #0a1e35 60%, #06101a 100%);
       overflow: hidden;
     }
 
@@ -38,9 +38,9 @@
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(ellipse 700px 500px at 10% 20%, rgba(46, 157, 86, 0.18) 0%, transparent 70%),
-        radial-gradient(ellipse 500px 400px at 85% 75%, rgba(21, 101, 192, 0.15) 0%, transparent 70%),
-        radial-gradient(ellipse 400px 300px at 60% 10%, rgba(255, 152, 0, 0.08) 0%, transparent 70%);
+        radial-gradient(ellipse 700px 500px at 10% 20%, rgba(20, 184, 166, 0.2) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 400px at 85% 75%, rgba(249, 115, 22, 0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 300px at 60% 10%, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
       pointer-events: none;
       animation: orbFloat 10s ease-in-out infinite alternate;
     }
@@ -60,8 +60,8 @@
         radial-gradient(circle 1.5px at 70% 20%, rgba(255,255,255,0.2) 0%, transparent 50%),
         radial-gradient(circle 2px at 85% 60%, rgba(255,255,255,0.15) 0%, transparent 50%),
         radial-gradient(circle 1px at 40% 80%, rgba(255,255,255,0.2) 0%, transparent 50%),
-        radial-gradient(circle 2px at 25% 70%, rgba(46,157,86,0.4) 0%, transparent 50%),
-        radial-gradient(circle 1.5px at 90% 40%, rgba(46,157,86,0.3) 0%, transparent 50%);
+        radial-gradient(circle 2px at 25% 70%, rgba(20,184,166,0.5) 0%, transparent 50%),
+        radial-gradient(circle 1.5px at 90% 40%, rgba(249,115,22,0.4) 0%, transparent 50%);
       pointer-events: none;
       animation: particleFloat 15s linear infinite alternate;
     }
@@ -93,7 +93,7 @@
     #adminApp > h1 {
       position: relative;
       z-index: 1;
-      background: linear-gradient(135deg, #4ade80, #22c55e, #86efac);
+      background: linear-gradient(135deg, #5eead4, #2dd4bf, #67e8f9);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -104,12 +104,12 @@
       order: 1;
       animation: titleGlow 0.8s ease-out;
       text-shadow: none;
-      filter: drop-shadow(0 0 20px rgba(74, 222, 128, 0.3));
+      filter: drop-shadow(0 0 20px rgba(45, 212, 191, 0.4));
     }
 
     @keyframes titleGlow {
-      from { opacity: 0; transform: translateY(-20px); filter: drop-shadow(0 0 40px rgba(74,222,128,0.5)); }
-      to   { opacity: 1; transform: translateY(0);     filter: drop-shadow(0 0 20px rgba(74,222,128,0.3)); }
+      from { opacity: 0; transform: translateY(-20px); filter: drop-shadow(0 0 40px rgba(45,212,191,0.6)); }
+      to   { opacity: 1; transform: translateY(0);     filter: drop-shadow(0 0 20px rgba(45,212,191,0.4)); }
     }
 
     #adminApp > p {
@@ -193,9 +193,9 @@
 
     .form-group input:focus {
       outline: none;
-      border-color: #4ade80;
+      border-color: #2dd4bf;
       background: rgba(255,255,255,0.12);
-      box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.15);
+      box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.15);
     }
 
     .password-wrapper {
@@ -221,13 +221,13 @@
     }
 
     .toggle-password:hover {
-      color: #4ade80;
-      background: rgba(74,222,128,0.1);
+      color: #2dd4bf;
+      background: rgba(45,212,191,0.1);
     }
 
     /* ====== LOGIN BUTTON ====== */
     .login-btn {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
+      background: linear-gradient(135deg, #0d9488, #14b8a6);
       color: white;
       padding: 1rem;
       border: none;
@@ -239,7 +239,7 @@
       margin-top: 0.5rem;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      box-shadow: 0 6px 24px rgba(34, 197, 94, 0.4);
+      box-shadow: 0 6px 24px rgba(13, 148, 136, 0.45);
       position: relative;
       overflow: hidden;
     }
@@ -254,7 +254,7 @@
 
     .login-btn:hover:not(:disabled) {
       transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(34, 197, 94, 0.5);
+      box-shadow: 0 12px 32px rgba(13, 148, 136, 0.55);
     }
 
     .login-btn:hover:not(:disabled)::before { transform: translateX(100%); }
@@ -287,10 +287,10 @@
     }
 
     .admin-message.success {
-      background: rgba(34, 197, 94, 0.15);
-      color: #4ade80;
-      border-left-color: #22c55e;
-      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.2);
+      background: rgba(20, 184, 166, 0.15);
+      color: #2dd4bf;
+      border-left-color: #0d9488;
+      box-shadow: 0 4px 16px rgba(13, 148, 136, 0.2);
     }
 
     .admin-message.error {
@@ -331,7 +331,7 @@
     /* ====== SIDEBAR ====== */
     .dashboard-sidebar {
       width: 260px;
-      background: linear-gradient(180deg, #0d2b18 0%, #122c1c 40%, #0a1f12 100%);
+      background: linear-gradient(180deg, #0c1a2e 0%, #0f2744 40%, #091426 100%);
       padding: 0;
       overflow-y: auto;
       box-shadow: 4px 0 20px rgba(0,0,0,0.3);
@@ -346,7 +346,7 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
-      background: linear-gradient(90deg, #22c55e, #3b82f6, #f59e0b, #ef4444, #22c55e);
+      background: linear-gradient(90deg, #14b8a6, #f97316, #a855f7, #ef4444, #14b8a6);
       background-size: 200% 100%;
       animation: rainbowSlide 4s linear infinite;
     }
@@ -392,7 +392,7 @@
       content: '';
       position: absolute; left: 0; top: 0; bottom: 0;
       width: 3px;
-      background: #22c55e;
+      background: #14b8a6;
       border-radius: 0 4px 4px 0;
       transform: scaleY(0);
       transition: transform 0.2s;
@@ -405,9 +405,9 @@
     }
 
     .sidebar-nav-item.active {
-      background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1));
-      color: #4ade80;
-      border: 1px solid rgba(34,197,94,0.2);
+      background: linear-gradient(135deg, rgba(20,184,166,0.2), rgba(20,184,166,0.1));
+      color: #2dd4bf;
+      border: 1px solid rgba(20,184,166,0.25);
     }
 
     .sidebar-nav-item.active::before { transform: scaleY(1); }
@@ -462,7 +462,7 @@
       justify-content: space-between;
       align-items: center;
       flex-shrink: 0;
-      border-bottom: 2px solid #e8f5e9;
+      border-bottom: 2px solid #ccfbf1;
       position: relative;
       overflow: hidden;
     }
@@ -471,7 +471,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, #f0fdf4, #ecfdf5 40%, white);
+      background: linear-gradient(135deg, #f0fdfc, #ccfbf1 40%, white);
       z-index: 0;
     }
 
@@ -481,7 +481,7 @@
       margin: 0;
       font-size: 1.7rem;
       font-weight: 800;
-      background: linear-gradient(135deg, #166534, #16a34a, #22c55e);
+      background: linear-gradient(135deg, #115e59, #0d9488, #14b8a6);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -528,7 +528,7 @@
       flex: 1;
       overflow-y: auto;
       padding: 1.8rem 2rem;
-      background: #eef2f7;
+      background: linear-gradient(180deg, #edf4f8 0%, #e8f0f6 100%);
     }
 
     .dashboard-content::-webkit-scrollbar { width: 6px; }
@@ -611,16 +611,16 @@
       font-weight: 600;
     }
 
-    /* Colorful stat card variants */
-    .dash-total  { background: linear-gradient(135deg, #166534, #16a34a, #22c55e); box-shadow: 0 8px 24px rgba(22, 163, 74, 0.35); }
-    .dash-belum  { background: linear-gradient(135deg, #991b1b, #dc2626, #ef4444); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.35); }
-    .dash-proses { background: linear-gradient(135deg, #92400e, #d97706, #f59e0b); box-shadow: 0 8px 24px rgba(217, 119, 6, 0.35); }
-    .dash-selesai{ background: linear-gradient(135deg, #065f46, #059669, #10b981); box-shadow: 0 8px 24px rgba(5, 150, 105, 0.35); }
-    .dash-tps    { background: linear-gradient(135deg, #1e3a8a, #1d4ed8, #3b82f6); box-shadow: 0 8px 24px rgba(29, 78, 216, 0.35); }
+    /* Colorful stat card variants - Waste Theme */
+    .dash-total  { background: linear-gradient(135deg, #134e4a, #0d9488, #14b8a6); box-shadow: 0 8px 24px rgba(13, 148, 136, 0.4); }
+    .dash-belum  { background: linear-gradient(135deg, #7f1d1d, #dc2626, #f87171); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4); }
+    .dash-proses { background: linear-gradient(135deg, #78350f, #d97706, #fbbf24); box-shadow: 0 8px 24px rgba(217, 119, 6, 0.4); }
+    .dash-selesai{ background: linear-gradient(135deg, #14532d, #16a34a, #4ade80); box-shadow: 0 8px 24px rgba(22, 163, 74, 0.4); }
+    .dash-tps    { background: linear-gradient(135deg, #3730a3, #6366f1, #a78bfa); box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4); }
 
     /* ====== SECTION HEADER ====== */
     .dashboard-section h2 {
-      color: #1a3a2a;
+      color: #134e4a;
       margin: 0 0 1.5rem 0;
       font-size: 1.4rem;
       font-weight: 800;
@@ -650,10 +650,10 @@
     }
 
     .refresh-btn:hover {
-      border-color: #22c55e;
-      color: #166534;
+      border-color: #14b8a6;
+      color: #115e59;
       transform: rotate(180deg) scale(1.1);
-      box-shadow: 0 6px 18px rgba(34, 197, 94, 0.2);
+      box-shadow: 0 6px 18px rgba(20, 184, 166, 0.2);
     }
 
     /* ====== REPORTS GRID ====== */
@@ -669,7 +669,7 @@
       padding: 1.4rem;
       border-radius: 18px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-      border-top: 4px solid #22c55e;
+      border-top: 4px solid #14b8a6;
       transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       animation: cardIn 0.5s ease-out both;
       position: relative; overflow: hidden;
@@ -690,7 +690,7 @@
       content: '';
       position: absolute; top: 0; left: 0; right: 0;
       height: 100%;
-      background: linear-gradient(180deg, rgba(34,197,94,0.03) 0%, transparent 40%);
+      background: linear-gradient(180deg, rgba(20,184,166,0.03) 0%, transparent 40%);
       pointer-events: none;
     }
 
@@ -699,10 +699,10 @@
       box-shadow: 0 20px 50px rgba(0,0,0,0.13);
     }
 
-    /* TPS variant */
-    .report-item.tps-card { border-top-color: #3b82f6; }
+    /* TPS variant - indigo */
+    .report-item.tps-card { border-top-color: #6366f1; }
     .report-item.tps-card::before {
-      background: linear-gradient(180deg, rgba(59,130,246,0.04) 0%, transparent 40%);
+      background: linear-gradient(180deg, rgba(99,102,241,0.04) 0%, transparent 40%);
     }
 
     /* Color border per status */
@@ -807,15 +807,15 @@
       cursor: pointer;
       transition: all 0.2s;
       appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2322c55e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314b8a6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
       background-repeat: no-repeat;
       background-position: right 10px center;
       background-size: 1.1em;
       padding-right: 2.5rem;
     }
 
-    .status-select-admin:hover { border-color: #22c55e; background-color: #f0fdf4; }
-    .status-select-admin:focus { outline: none; border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+    .status-select-admin:hover { border-color: #14b8a6; background-color: #f0fdfc; }
+    .status-select-admin:focus { outline: none; border-color: #14b8a6; box-shadow: 0 0 0 3px rgba(20,184,166,0.15); }
 
     /* ====== BUTTONS ====== */
     .btn-sm {
@@ -846,12 +846,12 @@
     .btn-sm:active::after { width: 200px; height: 200px; opacity: 0; }
 
     .btn-status {
-      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+      background: linear-gradient(135deg, #0d9488, #14b8a6);
       color: white;
-      box-shadow: 0 4px 14px rgba(29,78,216,0.3);
+      box-shadow: 0 4px 14px rgba(13,148,136,0.35);
     }
 
-    .btn-status:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(29,78,216,0.4); }
+    .btn-status:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(13,148,136,0.5); }
 
     .btn-delete {
       background: linear-gradient(135deg, #dc2626, #ef4444);
@@ -916,8 +916,8 @@
 </head>
 <body>
   <div id="adminApp" class="admin-login-container">
-    <h1>🔐 Admin Dashboard</h1>
-    <p>Kelola laporan sampah dari seluruh desa</p>
+    <h1>♻️ Dashboard Sampah</h1>
+    <p>Sistem Manajemen Laporan & TPS Digital</p>
 
     <div id="adminMessage" class="admin-message hidden"></div>
 
@@ -947,7 +947,7 @@
         </div>
       </div>
 
-      <button id="loginBtn" class="login-btn">Login Admin</button>
+      <button id="loginBtn" class="login-btn">🔑 Masuk ke Dashboard</button>
 
       <div class="login-info">
         Pastikan anda adalah admin yang berwenang mengelola laporan. Login akan dicatat.
@@ -956,26 +956,29 @@
 
     <div id="dashboard" class="dashboard-container hidden">
       <div class="dashboard-sidebar">
-        <h2>📊 Dashboard</h2>
+        <h2>🗑️ Sampah App</h2>
         <nav class="sidebar-nav">
           <a class="sidebar-nav-item active" href="#">
-            <span>📋</span> Laporan
+            <span>📋</span> Laporan Sampah
           </a>
           <a class="sidebar-nav-item" href="/" target="_blank">
-            <span>🗺️</span> Peta Publik
+            <span>🗺️</span> Peta Sebaran
+          </a>
+          <a class="sidebar-nav-item" href="/" target="_blank">
+            <span>♻️</span> Daur Ulang
           </a>
         </nav>
         <div id="sidebarStats"></div>
         <div class="sidebar-footer">
-          <small>KKN Sampah 2026</small><br/>
-          <small>Fajar Arief Rezky</small>
+          <small>♻️ KKN Sampah 2026</small><br/>
+          <small>🌿 Fajar Arief Rezky</small>
         </div>
       </div>
       <div class="dashboard-main">
         <div class="dashboard-header">
           <div>
-            <h1>Admin Dashboard</h1>
-            <p style="margin:2px 0 0;color:#888;font-size:0.88rem;">Kelola laporan sampah desa</p>
+            <h1>♻️ Admin Dashboard</h1>
+              <p style="margin:2px 0 0;color:#888;font-size:0.85rem;">🗑️ Kelola laporan sampah desa</p>
           </div>
           <button id="logoutBtn" class="logout-btn">🚪 Logout</button>
         </div>
@@ -984,11 +987,11 @@
           <div id="dashboardStats" class="dashboard-stats-bar"></div>
           <div class="dashboard-section">
             <div class="section-header">
-              <h2>📋 Laporan Terbaru</h2>
+              <h2>🗑️ Laporan Sampah Terbaru</h2>
               <button class="refresh-btn" onclick="loadReports()" title="Refresh data">🔄</button>
             </div>
             <div id="reportsList" class="reports-list">
-              <div class="empty-state">Memuat laporan...</div>
+              <div class="empty-state">♻️ Memuat data laporan sampah...</div>
             </div>
           </div>
         </div>
@@ -1035,7 +1038,7 @@
 
       const loginBtn = document.getElementById("loginBtn");
       loginBtn.disabled = true;
-      loginBtn.textContent = "Sedang login...";
+      loginBtn.textContent = "⏳ Sedang masuk...";
 
       try {
         const res = await fetch("/api/admin/login", {
@@ -1062,7 +1065,7 @@
         setAdminMessage("Gagal terhubung ke server", true);
       } finally {
         loginBtn.disabled = false;
-        loginBtn.textContent = "Login Admin";
+        loginBtn.textContent = "🔑 Masuk ke Dashboard";
       }
     }
 
@@ -1102,7 +1105,7 @@
 
         if (!data.ok) {
           document.getElementById("reportsList").innerHTML =
-            '<div class="empty-state">Tidak ada laporan</div>';
+            '<div class="empty-state">♻️ Tidak ada laporan warga</div>';
           return;
         }
 
@@ -1127,26 +1130,26 @@
         const statsEl = document.getElementById("dashboardStats");
         if (statsEl) {
           statsEl.innerHTML = `
-            <div class="dash-stat dash-total"><span class="stat-icon">📊</span><span>${allData.length}</span><small>Total Laporan</small></div>
-            <div class="dash-stat dash-belum"><span class="stat-icon">🔴</span><span>${cntBelum}</span><small>Belum Ditangani</small></div>
-            <div class="dash-stat dash-proses"><span class="stat-icon">🟠</span><span>${cntProses}</span><small>Sedang Ditangani</small></div>
+            <div class="dash-stat dash-total"><span class="stat-icon">🗑️</span><span>${allData.length}</span><small>Total Laporan</small></div>
+            <div class="dash-stat dash-belum"><span class="stat-icon">⚠️</span><span>${cntBelum}</span><small>Belum Ditangani</small></div>
+            <div class="dash-stat dash-proses"><span class="stat-icon">♻️</span><span>${cntProses}</span><small>Sedang Ditangani</small></div>
             <div class="dash-stat dash-selesai"><span class="stat-icon">✅</span><span>${cntSelesai}</span><small>Selesai</small></div>
-            <div class="dash-stat dash-tps"><span class="stat-icon">📍</span><span>${cntTps}</span><small>Titik TPS</small></div>
+            <div class="dash-stat dash-tps"><span class="stat-icon">🚛</span><span>${cntTps}</span><small>Titik TPS</small></div>
           `;
         }
         const sidebarStatsEl = document.getElementById("sidebarStats");
         if (sidebarStatsEl) {
           sidebarStatsEl.innerHTML = `
-            <div class="sidebar-stat-row"><span class="sstat-label">📋 Total</span><span class="sstat-val">${allData.length}</span></div>
-            <div class="sidebar-stat-row"><span class="sstat-label">🔴 Belum</span><span class="sstat-val">${cntBelum}</span></div>
-            <div class="sidebar-stat-row"><span class="sstat-label">🟠 Proses</span><span class="sstat-val">${cntProses}</span></div>
-            <div class="sidebar-stat-row"><span class="sstat-label">🟢 Selesai</span><span class="sstat-val">${cntSelesai}</span></div>
+            <div class="sidebar-stat-row"><span class="sstat-label">🗑️ Total</span><span class="sstat-val">${allData.length}</span></div>
+            <div class="sidebar-stat-row"><span class="sstat-label">⚠️ Belum</span><span class="sstat-val">${cntBelum}</span></div>
+            <div class="sidebar-stat-row"><span class="sstat-label">♻️ Proses</span><span class="sstat-val">${cntProses}</span></div>
+            <div class="sidebar-stat-row"><span class="sstat-label">✅ Selesai</span><span class="sstat-val">${cntSelesai}</span></div>
           `;
         }
 
         if (reports.length === 0) {
           document.getElementById("reportsList").innerHTML =
-            '<div class="empty-state">Tidak ada laporan</div>';
+            '<div class="empty-state">🗑️ Tidak ada laporan yang tersimpan</div>';
           return;
         }
 
@@ -1156,8 +1159,8 @@
               const isTps = report.sourceType === "TPS" || report.type === "TPS" || report.status === "TPS";
               const photoUrl = resolvePhotoUrl(report.foto);
               const photoHtml = photoUrl 
-                ? `<img src="${photoUrl}" style="width:100%;max-width:300px;border-radius:6px;margin-top:1rem;border:1px solid #ddd"/>`
-                : `<p style="color:#999;font-size:0.9rem;margin-top:0.5rem">Tidak ada foto</p>`;
+                ? `<img src="${photoUrl}" style="width:100%;max-width:300px;border-radius:10px;margin-top:1rem;border:1px solid #e2e8f0;"/>`
+                : `<p style="color:#aaa;font-size:0.88rem;margin-top:0.5rem;padding:8px;background:#f8fafc;border-radius:8px;text-align:center;">📷 Tidak ada foto</p>`;
 
               const statusClass = report.status === 'Selesai Ditangani' ? 'done'
                 : report.status === 'Sedang Ditindaklanjuti' ? 'process' : 'pending';
@@ -1169,20 +1172,20 @@
                         <option ${report.status === 'Sedang Ditindaklanjuti' ? 'selected' : ''}>Sedang Ditindaklanjuti</option>
                         <option ${report.status === 'Selesai Ditangani' ? 'selected' : ''}>Selesai Ditangani</option>
                       </select>
-                      <button class="btn-sm btn-delete" onclick="deleteReport(${report.rowNumber})">🗑️ Hapus</button>
+                      <button class="btn-sm btn-delete" onclick="deleteReport(${report.rowNumber})">🗑️ Hapus Laporan</button>
                     </div>
                   `
-                : `<p style="color:#1565C0;font-size:0.88rem;margin-top:0.6rem">📍 <strong>Titik TPS</strong> — dapat dilihat di peta publik.</p>`;
+                : `<p style="color:#6366f1;font-size:0.88rem;margin-top:0.8rem;padding:8px 12px;background:#eef2ff;border-radius:8px;">🚛 <strong>Titik TPS</strong> — terlihat di peta publik sebagai ikon truk sampah.</p>`;
 
               return `
           <div class="report-item ${isTps ? 'tps-card' : 'status-' + statusClass}">
-            <h3>${isTps ? '📍' : '👤'} ${report.nama || "-"}</h3>
-            <p><strong>Tipe:</strong> ${isTps ? "📍 TPS / Bank Sampah" : "👤 Laporan Warga"}</p>
-            <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${isTps ? "TPS Terdaftar" : (report.status || "Belum Ditangani")}</span></p>
-            <p><strong>Deskripsi:</strong> ${report.deskripsi || "-"}</p>
-            <p><strong>Lokasi:</strong> ${report.latitude ? `📌 (${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)})` : "-"}</p>
-            <p><strong>Tanggal:</strong> 🕐 ${report.timestamp || "-"}</p>
-            <p><strong>No. WA:</strong> 📞 ${report.nomorWa || "-"}</p>
+            <h3>${isTps ? '🚛' : '👤'} ${report.nama || "-"}</h3>
+            <p><strong>Tipe:</strong> ${isTps ? "🚛 TPS / Bank Sampah" : "👤 Laporan Warga"}</p>
+            <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${isTps ? "🏭 TPS Terdaftar" : (report.status || "⚠️ Belum Ditangani")}</span></p>
+            <p><strong>🗑️ Deskripsi:</strong> ${report.deskripsi || "-"}</p>
+            <p><strong>📌 Lokasi:</strong> ${report.latitude ? `(${report.latitude.toFixed(4)}, ${report.longitude.toFixed(4)})` : "-"}</p>
+            <p><strong>🕐 Tanggal:</strong> ${report.timestamp || "-"}</p>
+            <p><strong>📞 No. WA:</strong> ${report.nomorWa || "-"}</p>
             ${photoHtml}
             ${actionsHtml}
           </div>
