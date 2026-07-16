@@ -3,7 +3,12 @@
   "builds": [
     {
       "src": "src/server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 300,
+        "includeFiles": "uploads/**,credentials.json",
+        "excludeFiles": "certs/**,.wwebjs*"
+      }
     }
   ],
   "routes": [
@@ -15,11 +20,7 @@
   "env": {
     "PORT": "3000",
     "HOST": "0.0.0.0",
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "src/server.js": {
-      "maxDuration": 300
-    }
+    "NODE_ENV": "production",
+    "FORCE_LOCAL_HTTPS": "0"
   }
 }
