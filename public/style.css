@@ -1270,7 +1270,7 @@ footer:hover {
 /* ===== CUSTOM GPS MAP MARKERS ===== */
 .map-marker-wrap {
   background: none !important; border: 0 !important;
-  animation: markerDrop .55s cubic-bezier(.2,.9,.3,1.35) both;
+  animation: markerFade .4s ease both;
   animation-delay: var(--marker-delay, 0s);
 }
 .map-marker {
@@ -1278,6 +1278,8 @@ footer:hover {
   color: #fff; background: var(--marker-color); border: 3px solid #fff;
   border-radius: 50% 50% 50% 12%; box-shadow: 0 7px 18px rgba(0,0,0,.28);
   transform: rotate(-45deg); isolation: isolate;
+  animation: markerPop .55s cubic-bezier(.2,.9,.3,1.35) both;
+  animation-delay: var(--marker-delay, 0s);
 }
 .map-marker::before {
   content: ""; position: absolute; inset: -7px; z-index: -1;
@@ -1293,9 +1295,13 @@ footer:hover {
   background: rgba(255,255,255,.95); color: var(--marker-color); font-size: 14px; text-shadow: none;
 }
 .map-marker-wrap:hover .map-marker { filter: brightness(1.12); }
-@keyframes markerDrop {
-  from { opacity: 0; transform: translateY(-28px) scale(.55); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes markerFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes markerPop {
+  from { transform: rotate(-45deg) translate(14px, -14px) scale(.55); }
+  to { transform: rotate(-45deg) translate(0, 0) scale(1); }
 }
 @keyframes gpsRipple {
   0% { opacity: .7; transform: scale(.65); }
@@ -1307,7 +1313,7 @@ footer:hover {
   .corner-decor span:nth-child(n+2) { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .corner-decor span, .map-marker-wrap, .map-marker::before { animation: none !important; }
+  .corner-decor span, .map-marker-wrap, .map-marker, .map-marker::before { animation: none !important; }
 }
 
 /* Spinner loading state */
