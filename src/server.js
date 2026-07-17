@@ -292,9 +292,19 @@ app.get("/api/tps", async (req, res) => {
 // Kirim laporan dari form web
 app.post("/api/reports", upload.single("foto"), async (req, res) => {
   try {
-    const { nama, nomorWa, deskripsi, latitude, longitude } = req.body;
+    const { nama, nomorWa, deskripsi, latitude, longitude, accuracy } = req.body;
     if (!nama || !nomorWa || !deskripsi || latitude === undefined || longitude === undefined) {
       return res.status(400).json({ ok: false, message: "Semua field wajib diisi." });
+    }
+
+    const parsedLatitude = parseFloat(latitude);
+    const parsedLongitude = parseFloat(longitude);
+    const parsedAccuracy = accuracy === "" || accuracy === undefined ? null : parseFloat(accuracy);
+    if (!Number.isFinite(parsedLatitude) || !Number.isFinite(parsedLongitude)) {
+      return res.status(400).json({ ok: false, message: "Koordinat laporan tidak valid." });
+    }
+    if (parsedAccuracy !== null && (!Number.isFinite(parsedAccuracy) || parsedAccuracy < 0 || parsedAccuracy > 50)) {
+      return res.status(400).json({ ok: false, message: "Akurasi GPS harus maksimal 50 meter." });
     }
 
     let fotoReference;
@@ -306,8 +316,9 @@ app.post("/api/reports", upload.single("foto"), async (req, res) => {
       nomorWa,
       nama,
       deskripsi,
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
+      latitude: parsedLatitude,
+      longitude: parsedLongitude,
+      accuracy: parsedAccuracy,
       fotoFilename: fotoReference,
     });
 

@@ -96,11 +96,21 @@
           </div>
 
           <label>Koordinat lokasi (garis lintang) <span style="color:red;">*</span></label>
-          <input type="text" id="latitude" name="latitude" placeholder="Contoh: -6.4001" required />
+          <input type="text" id="latitude" name="latitude" placeholder="Pilih lokasi melalui tombol di atas" readonly required />
 
           <label>Koordinat lokasi (garis bujur) <span style="color:red;">*</span></label>
-          <input type="text" id="longitude" name="longitude" placeholder="Contoh: 107.4438" required />
+          <input type="text" id="longitude" name="longitude" placeholder="Pilih lokasi melalui tombol di atas" readonly required />
+          <input type="hidden" id="locationAccuracy" name="accuracy" />
           <small class="field-hint">Kalau belum tahu, tekan tombol di atas untuk pakai lokasi Anda atau pilih titik di peta.</small>
+
+          <div id="locationConfirmation" class="location-confirmation" hidden>
+            <strong id="locationAccuracyText">Akurasi lokasi belum tersedia.</strong>
+            <small>Marker dapat digeser di peta untuk menyesuaikan titik sampah.</small>
+            <label>
+              <input type="checkbox" id="confirmLocation" />
+              Saya sudah memeriksa dan memastikan titik laporan sudah benar.
+            </label>
+          </div>
 
           <label>Foto Sampah (opsional)</label>
           <input type="file" id="foto" name="foto" accept="image/*" />

@@ -34,6 +34,7 @@ const HEADERS = [
   "Longitude",
   "Status",
   "Foto",
+  "Accuracy (m)",
 ];
 
 // Header untuk sheet Titik TPS
@@ -67,19 +68,25 @@ async function ensureHeader() {
   const sheets = await getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_NAME}!A1:H1`,
+    range: `${SHEET_NAME}!A1:I1`,
   });
 
   const hasHeader = res.data.values && res.data.values.length > 0;
   if (!hasHeader) {
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A1:H1`,
+      range: `${SHEET_NAME}!A1:I1`,
       valueInputOption: "RAW",
       requestBody: { values: [HEADERS] },
     });
     console.log("[sheets] Header sheet laporan berhasil dibuat.");
   }
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_NAME}!I1`,
+    valueInputOption: "RAW",
+    requestBody: { values: [["Accuracy (m)"]] },
+  });
 
   // Pastikan sheet Titik TPS juga ada
   try {
@@ -127,6 +134,7 @@ async function appendReport({
   deskripsi,
   latitude,
   longitude,
+  accuracy,
   fotoFilename,
 }) {
   const sheets = await getSheetsClient();
@@ -143,11 +151,12 @@ async function appendReport({
     longitude,
     "Belum Ditangani",
     fotoFilename || "-",
+    accuracy ?? "-",
   ];
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_NAME}!A:H`,
+    range: `${SHEET_NAME}!A:I`,
     valueInputOption: "USER_ENTERED",
     insertDataOption: "INSERT_ROWS",
     requestBody: { values: [row] },
@@ -162,7 +171,7 @@ async function getAllReports() {
     const sheets = await getSheetsClient();
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A2:H`,
+      range: `${SHEET_NAME}!A2:I`,
     });
 
     const parseCoordinate = (value) => {
@@ -185,6 +194,7 @@ async function getAllReports() {
         longitude: parseCoordinate(r[5]),
         status: r[6] || "Belum Ditangani",
         foto: r[7] || "",
+        accuracy: Number.isFinite(parseCoordinate(r[8])) ? parseCoordinate(r[8]) : null,
       }))
       .filter((r) => !isNaN(r.latitude) && !isNaN(r.longitude) && r.status !== "Dihapus");
   } catch (err) {

@@ -86,6 +86,7 @@ let map;
 let markers = [];
 let locationPickerMarker = null;
 let reporterPreviewMarker = null;
+let reporterAccuracyCircle = null;
 let tpsLocationPickerMarker = null;
 let locationPickerActive = false;
 let tpsLocationPickerActive = false;
@@ -103,6 +104,85 @@ const defaultTpsPoints = [
   { name: "TPS Perumahan Cikampek", lat: -6.4105, lng: 107.4518, type: "TPS" },
   { name: "TPS Terminal", lat: -6.3924, lng: 107.4369, type: "TPS" },
 ];
+
+const MAX_REPORT_ACCURACY_METERS = 50;
+const GPS_SAMPLE_TARGET = 4;
+
+function clearReporterLocationPreview() {
+  if (reporterPreviewMarker && map) map.removeLayer(reporterPreviewMarker);
+  if (reporterAccuracyCircle && map) map.removeLayer(reporterAccuracyCircle);
+  reporterPreviewMarker = null;
+  reporterAccuracyCircle = null;
+}
+
+function showReporterLocation(latitude, longitude, accuracy = null) {
+  clearReporterLocationPreview();
+  reporterPreviewMarker = L.marker([latitude, longitude], {
+    icon: reporterIcon("#2E7D32"),
+    draggable: true,
+  }).addTo(map).bindPopup("<strong>Geser pin jika titik sampah belum tepat</strong>").openPopup();
+
+  if (Number.isFinite(accuracy) && accuracy > 0) {
+    reporterAccuracyCircle = L.circle([latitude, longitude], {
+      radius: accuracy,
+      color: "#2E7D32",
+      fillColor: "#66BB6A",
+      fillOpacity: 0.14,
+      weight: 2,
+      interactive: false,
+    }).addTo(map);
+  }
+
+  reporterPreviewMarker.on("dragend", (event) => {
+    const point = event.target.getLatLng();
+    document.getElementById("latitude").value = point.lat.toFixed(6);
+    document.getElementById("longitude").value = point.lng.toFixed(6);
+    if (reporterAccuracyCircle) reporterAccuracyCircle.setLatLng(point);
+    document.getElementById("confirmLocation").checked = false;
+    showFormMessage("Marker digeser. Periksa posisinya lalu konfirmasi kembali.");
+  });
+
+  const confirmation = document.getElementById("locationConfirmation");
+  confirmation.hidden = false;
+  document.getElementById("confirmLocation").checked = false;
+  document.getElementById("locationAccuracyText").textContent = Number.isFinite(accuracy)
+    ? `Akurasi GPS terbaik: ±${Math.round(accuracy)} meter`
+    : "Lokasi dipilih manual di peta";
+  map.setView([latitude, longitude], 18);
+}
+
+function getBestGpsPosition() {
+  return new Promise((resolve, reject) => {
+    const samples = [];
+    let settled = false;
+    let watchId;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      if (watchId !== undefined) navigator.geolocation.clearWatch(watchId);
+      if (!samples.length) return reject(new Error("NO_POSITION"));
+      samples.sort((a, b) => a.coords.accuracy - b.coords.accuracy);
+      resolve(samples[0]);
+    };
+    const timer = setTimeout(finish, 12000);
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        samples.push(position);
+        showFormMessage(`Mencari GPS terbaik... sampel ${samples.length}/${GPS_SAMPLE_TARGET}, akurasi ±${Math.round(position.coords.accuracy)} m`);
+        if (position.coords.accuracy <= 20 || samples.length >= GPS_SAMPLE_TARGET) {
+          clearTimeout(timer);
+          finish();
+        }
+      },
+      (error) => {
+        clearTimeout(timer);
+        if (!samples.length) reject(error);
+        else finish();
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+  });
+}
 
 function initMap() {
   map = L.map("map", {
@@ -126,10 +206,10 @@ function initMap() {
       document.getElementById("longitude").value = lng.toFixed(6);
       if (locationPickerMarker) {
         map.removeLayer(locationPickerMarker);
+        locationPickerMarker = null;
       }
-      locationPickerMarker = L.marker([lat, lng], {
-        icon: colorIcon("#E65100"),
-      }).addTo(map);
+      document.getElementById("locationAccuracy").value = "";
+      showReporterLocation(lat, lng, null);
       showFormMessage("Lokasi laporan dipilih. Silakan kirim laporan.");
       setLocationPickerState(false);
     }
@@ -573,20 +653,21 @@ function bindReportForm() {
   const pickLocationBtn = document.getElementById("pickLocationBtn");
   const addTpsBtn = document.getElementById("addTpsBtn");
 
-  useMyLocationBtn?.addEventListener("click", () => {
+  useMyLocationBtn?.addEventListener("click", async () => {
     if (!navigator.geolocation) {
       showFormMessage("Browser Anda belum mendukung penentuan lokasi otomatis.", true);
       return;
     }
 
-    showFormMessage("Sedang mencari lokasi Anda. Pastikan Anda berada di tempat terbuka...");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+    showFormMessage("Mengambil beberapa sampel GPS. Pastikan Anda berada di tempat terbuka...");
+    useMyLocationBtn.disabled = true;
+    try {
+        const position = await getBestGpsPosition();
         const { latitude, longitude, accuracy } = position.coords;
 
-        if (accuracy > 150) {
+        if (accuracy > MAX_REPORT_ACCURACY_METERS) {
           showFormMessage(
-            `Akurasi lokasi masih rendah (${Math.round(accuracy)} m). Coba lagi di tempat terbuka atau pilih lokasi di peta.`,
+            `Akurasi terbaik masih ±${Math.round(accuracy)} m. Maksimal ${MAX_REPORT_ACCURACY_METERS} m. Coba lagi di tempat terbuka atau pilih lokasi di peta.`,
             true
           );
           return;
@@ -594,32 +675,19 @@ function bindReportForm() {
 
         document.getElementById("latitude").value = latitude.toFixed(6);
         document.getElementById("longitude").value = longitude.toFixed(6);
-        showFormMessage(`Lokasi Anda terdeteksi dengan akurasi ${Math.round(accuracy)} m.`);
-
-        if (reporterPreviewMarker) {
-          map.removeLayer(reporterPreviewMarker);
-        }
-        reporterPreviewMarker = L.marker([latitude, longitude], {
-          icon: reporterIcon("#2E7D32"),
-        })
-          .addTo(map)
-          .bindPopup("<strong>Posisi pelapor terdeteksi</strong>")
-          .openPopup();
-
-        if (map) {
-          map.setView([latitude, longitude], 17);
-        }
-      },
-      (error) => {
+        document.getElementById("locationAccuracy").value = accuracy.toFixed(1);
+        showReporterLocation(latitude, longitude, accuracy);
+        showFormMessage(`Lokasi diterima dengan akurasi terbaik ±${Math.round(accuracy)} m. Geser bila perlu lalu konfirmasi.`);
+    } catch (error) {
         const messages = {
           1: "Akses lokasi ditolak. Izinkan akses lokasi di browser lalu coba lagi.",
           2: "Sinyal lokasi tidak tersedia saat ini. Coba lagi atau pilih lokasi di peta.",
           3: "Waktu pencarian lokasi habis. Coba lagi atau pilih lokasi di peta.",
         };
         showFormMessage(messages[error.code] || "Gagal mengambil lokasi. Coba pilih lokasi di peta.", true);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+    } finally {
+      useMyLocationBtn.disabled = false;
+    }
   });
 
   pickLocationBtn?.addEventListener("click", () => {
@@ -631,12 +699,17 @@ function bindReportForm() {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (!document.getElementById("confirmLocation").checked) {
+      showFormMessage("Periksa marker di peta dan centang konfirmasi lokasi sebelum mengirim.", true);
+      return;
+    }
     const formData = new FormData();
     formData.append("nama", document.getElementById("nama").value.trim());
     formData.append("nomorWa", document.getElementById("nomorWa").value.trim());
     formData.append("deskripsi", document.getElementById("deskripsi").value.trim());
     formData.append("latitude", document.getElementById("latitude").value.trim());
     formData.append("longitude", document.getElementById("longitude").value.trim());
+    formData.append("accuracy", document.getElementById("locationAccuracy").value.trim());
     const fotoInput = document.getElementById("foto");
     if (fotoInput.files[0]) {
       formData.append("foto", fotoInput.files[0]);
@@ -655,6 +728,8 @@ function bindReportForm() {
 
       showFormMessage("Laporan berhasil dikirim.");
       form.reset();
+      document.getElementById("locationConfirmation").hidden = true;
+      clearReporterLocationPreview();
       loadReports();
     } catch (err) {
       console.error(err);
@@ -725,6 +800,7 @@ function renderReportList() {
           <strong>${title}</strong> — ${r.timestamp}<br/>
           ${description}
           <div class="badge ${cls}">${r.status}</div><br/>
+          ${Number.isFinite(r.accuracy) ? `<small class="field-hint">Akurasi GPS: ±${Math.round(r.accuracy)} meter</small><br/>` : ""}
           ${photoUrl ? `<img src="${photoUrl}" alt="foto laporan"/>` : ""}
           ${
             ADMIN_STATE.authenticated
@@ -792,6 +868,7 @@ function renderMarkers(reports) {
       <strong>${item.name || item.nama}</strong><br/>
       ${item.description || item.deskripsi || ""}<br/>
       ${item.status && item.status !== "TPS" ? `<em>${item.status}</em><br/>` : ""}
+      ${Number.isFinite(item.accuracy) ? `Akurasi GPS: ±${Math.round(item.accuracy)} meter<br/>` : ""}
       ${item.timestamp ? item.timestamp : ""}
       ${photoUrl ? `<br/><img src="${photoUrl}" style="width:150px;border-radius:6px;margin-top:6px"/>` : ""}
     `);
