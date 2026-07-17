@@ -152,7 +152,7 @@ function initMap() {
   });
 }
 
-function colorIcon(color, isTrash = false) {
+function legacyColorIcon(color, isTrash = false) {
   if (!isTrash) {
     return L.divIcon({
       className: "",
@@ -168,13 +168,37 @@ function colorIcon(color, isTrash = false) {
   });
 }
 
-function reporterIcon(color) {
+function legacyReporterIcon(color) {
   return L.divIcon({
     className: "",
     html: `<div style="background:${color};width:24px;height:24px;border-radius:50%;border:2px solid #ffffff;box-shadow:0 0 5px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;font-size:13px;">👤</div>`,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
     popupAnchor: [0, -10],
+  });
+}
+
+// Marker GPS modern untuk TPS, titik pilihan, dan laporan warga.
+// Deklarasi ini menggantikan renderer marker lama di atas.
+function colorIcon(color, isTrash = false) {
+  const type = isTrash ? "tps" : "picked";
+  const symbol = isTrash ? "♻" : "⌖";
+  return L.divIcon({
+    className: `map-marker-wrap map-marker-wrap--${type}`,
+    html: `<div class="map-marker map-marker--${type}" style="--marker-color:${color}"><span>${symbol}</span></div>`,
+    iconSize: [42, 48],
+    iconAnchor: [21, 44],
+    popupAnchor: [0, -42],
+  });
+}
+
+function reporterIcon(color) {
+  return L.divIcon({
+    className: "map-marker-wrap map-marker-wrap--reporter",
+    html: `<div class="map-marker map-marker--reporter" style="--marker-color:${color}"><span>!</span></div>`,
+    iconSize: [42, 48],
+    iconAnchor: [21, 44],
+    popupAnchor: [0, -42],
   });
 }
 
@@ -746,7 +770,7 @@ function renderMarkers(reports) {
     ...reports,
   ];
 
-  allPoints.forEach((item) => {
+  allPoints.forEach((item, index) => {
     const isTrashMarker = item.type === "TPS" || item.status === "TPS";
     const color = isTrashMarker ? "#1565C0" : STATUS_COLOR[item.status] || "#C62828";
 
@@ -757,6 +781,11 @@ function renderMarkers(reports) {
       : L.marker([item.latitude || item.lat, item.longitude || item.lng], {
           icon: reporterIcon(color),
         }).addTo(map);
+
+    const markerElement = marker.getElement();
+    if (markerElement) {
+      markerElement.style.setProperty("--marker-delay", `${Math.min(index * 0.08, 0.8)}s`);
+    }
 
     const photoUrl = resolvePhotoUrl(item.foto);
     marker.bindPopup(`

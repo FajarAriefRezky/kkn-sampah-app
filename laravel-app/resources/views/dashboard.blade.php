@@ -92,10 +92,6 @@
         </section>
     </aside>
 </main>
-<footer>
-    Sistem Informasi Digital Pengelolaan Sampah Desa — Chatbot WhatsApp &amp; Peta Digital &middot;
-    KKN 2026 &middot; Nama: Fajar Arief Rezky | NIM: 23416255201230 | Kelas: IF23E
-</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const STATUS_COLOR = { 'Belum Ditangani':'#C62828', 'Sedang Ditindaklanjuti':'#F57C00', 'Selesai Ditangani':'#2E7D32' };
