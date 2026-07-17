@@ -268,6 +268,33 @@
       color: rgba(255,255,255,0.3);
     }
 
+    .map-tps-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      padding: 0.95rem;
+      border: 1px solid rgba(45, 212, 191, 0.5);
+      border-radius: 12px;
+      background: rgba(45, 212, 191, 0.09);
+      color: #5eead4;
+      font-weight: 800;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      transition: all 0.25s ease;
+    }
+
+    .map-tps-btn:hover {
+      color: #fff;
+      background: rgba(20, 184, 166, 0.24);
+      border-color: #2dd4bf;
+      box-shadow: 0 8px 24px rgba(13, 148, 136, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .map-tps-btn:active { transform: translateY(0); }
+
     /* ====== ADMIN MESSAGE ====== */
     .admin-message {
       padding: 1rem 1.2rem;
@@ -948,6 +975,10 @@
       </div>
 
       <button id="loginBtn" class="login-btn">🔑 Masuk ke Dashboard</button>
+
+      <a href="/" class="map-tps-btn" aria-label="Buka Map TPS tanpa login">
+        <span aria-hidden="true">🗺️</span> Map TPS
+      </a>
 
       <div class="login-info">
         Pastikan anda adalah admin yang berwenang mengelola laporan. Login akan dicatat.
