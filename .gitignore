@@ -6,3 +6,6 @@ credentials.json
 certs/
 uploads/*
 !uploads/.gitkeep
+
+.vercel
+.env*

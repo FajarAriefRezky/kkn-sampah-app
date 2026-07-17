@@ -6,7 +6,7 @@
       "use": "@vercel/node",
       "config": {
         "maxDuration": 300,
-        "includeFiles": "uploads/**,credentials.json",
+        "includeFiles": "uploads/**",
         "excludeFiles": "certs/**,.wwebjs*"
       }
     }
