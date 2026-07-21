@@ -9,6 +9,8 @@ require("dotenv").config();
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const SHEET_NAME = process.env.SHEET_NAME || "Laporan";
 const TPS_SHEET_NAME = "TitikTPS";
+const ADMIN_SHEET_NAME = "AdminUsers";
+const STATUS_HISTORY_SHEET_NAME = "RiwayatStatus";
 const CREDENTIALS_PATH = path.resolve(
   process.env.GOOGLE_APPLICATION_CREDENTIALS || "./credentials.json"
 );
@@ -47,6 +49,8 @@ const TPS_HEADERS = [
   "Longitude",
   "Foto",
 ];
+const ADMIN_HEADERS = ["Username", "Password Hash", "Nama", "Aktif", "Dibuat", "Diubah"];
+const STATUS_HISTORY_HEADERS = ["Timestamp", "Baris Laporan", "Nama Pelapor", "Status Lama", "Status Baru", "Diubah Oleh"];
 
 function getAuth() {
   const inlineCredentials = getServiceAccountCredentials();
@@ -61,6 +65,34 @@ async function getSheetsClient() {
   const auth = getAuth();
   const client = await auth.getClient();
   return google.sheets({ version: "v4", auth: client });
+}
+
+async function ensureSheetWithHeader(sheets, sheetName, headers) {
+  try {
+    const result = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${sheetName}!A1:${String.fromCharCode(64 + headers.length)}1`,
+    });
+    if (!result.data.values?.length) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${sheetName}!A1`,
+        valueInputOption: "RAW",
+        requestBody: { values: [headers] },
+      });
+    }
+  } catch (err) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SPREADSHEET_ID,
+      requestBody: { requests: [{ addSheet: { properties: { title: sheetName } } }] },
+    });
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${sheetName}!A1`,
+      valueInputOption: "RAW",
+      requestBody: { values: [headers] },
+    });
+  }
 }
 
 // Pastikan baris header ada di sheet laporan. Dipanggil sekali saat startup.
@@ -125,6 +157,10 @@ async function ensureHeader() {
       }
     }
   }
+
+
+  await ensureSheetWithHeader(sheets, ADMIN_SHEET_NAME, ADMIN_HEADERS);
+  await ensureSheetWithHeader(sheets, STATUS_HISTORY_SHEET_NAME, STATUS_HISTORY_HEADERS);
 }
 
 // Tambah satu baris laporan baru
@@ -211,6 +247,71 @@ async function updateStatus(rowNumber, status) {
     range: `${SHEET_NAME}!G${rowNumber}`,
     valueInputOption: "RAW",
     requestBody: { values: [[status]] },
+  });
+}
+
+async function getReportByRowNumber(rowNumber) {
+  const sheets = await getSheetsClient();
+  const result = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${SHEET_NAME}!A${rowNumber}:I${rowNumber}`,
+  });
+  const row = result.data.values?.[0] || [];
+  return { nama: row[2] || "-", status: row[6] || "Belum Ditangani" };
+}
+
+async function appendStatusHistory({ rowNumber, reportName, oldStatus, newStatus, changedBy }) {
+  const sheets = await getSheetsClient();
+  await ensureSheetWithHeader(sheets, STATUS_HISTORY_SHEET_NAME, STATUS_HISTORY_HEADERS);
+  const timestamp = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${STATUS_HISTORY_SHEET_NAME}!A:F`,
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: { values: [[timestamp, rowNumber, reportName, oldStatus, newStatus, changedBy]] },
+  });
+}
+
+async function getStatusHistory(limit = 100) {
+  const sheets = await getSheetsClient();
+  await ensureSheetWithHeader(sheets, STATUS_HISTORY_SHEET_NAME, STATUS_HISTORY_HEADERS);
+  const result = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${STATUS_HISTORY_SHEET_NAME}!A2:F`,
+  });
+  return (result.data.values || []).slice(-limit).reverse().map((row) => ({
+    timestamp: row[0] || "", rowNumber: Number(row[1]) || null, reportName: row[2] || "-",
+    oldStatus: row[3] || "-", newStatus: row[4] || "-", changedBy: row[5] || "-",
+  }));
+}
+
+async function getAdminUser(username) {
+  const sheets = await getSheetsClient();
+  await ensureSheetWithHeader(sheets, ADMIN_SHEET_NAME, ADMIN_HEADERS);
+  const result = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: `${ADMIN_SHEET_NAME}!A2:F` });
+  const rows = result.data.values || [];
+  const index = rows.findIndex((row) => String(row[0] || "").toLowerCase() === String(username).toLowerCase());
+  if (index < 0) return null;
+  const row = rows[index];
+  return { rowNumber: index + 2, username: row[0], passwordHash: row[1], name: row[2] || row[0], active: String(row[3]).toLowerCase() !== "false" };
+}
+
+async function upsertAdminUser({ username, passwordHash, name, active = true }) {
+  const sheets = await getSheetsClient();
+  await ensureSheetWithHeader(sheets, ADMIN_SHEET_NAME, ADMIN_HEADERS);
+  const existing = await getAdminUser(username);
+  const timestamp = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+  if (existing) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID, range: `${ADMIN_SHEET_NAME}!A${existing.rowNumber}:F${existing.rowNumber}`,
+      valueInputOption: "RAW", requestBody: { values: [[username, passwordHash, name || existing.name, active ? "TRUE" : "FALSE", "", timestamp]] },
+    });
+    return;
+  }
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SPREADSHEET_ID, range: `${ADMIN_SHEET_NAME}!A:F`, valueInputOption: "RAW", insertDataOption: "INSERT_ROWS",
+    requestBody: { values: [[username, passwordHash, name || username, active ? "TRUE" : "FALSE", timestamp, timestamp]] },
   });
 }
 
@@ -318,4 +419,9 @@ module.exports = {
   deleteReport,
   appendTps,
   getAllTps,
+  getReportByRowNumber,
+  appendStatusHistory,
+  getStatusHistory,
+  getAdminUser,
+  upsertAdminUser,
 };
