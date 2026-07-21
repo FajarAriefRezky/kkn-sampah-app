@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard - KKN Sampah</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
   <style>
     /* ====== ADMIN DASHBOARD - FULL REDESIGN ====== */
@@ -939,6 +940,18 @@
       .dash-stat span { font-size: 1.6rem; }
       .dash-stat .stat-icon { font-size: 1.4rem; }
     }
+    .admin-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) repeat(2,minmax(150px,.3fr)) auto;gap:10px;margin-bottom:16px;padding:15px;background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(15,23,42,.07)}
+    .admin-toolbar input,.admin-toolbar select,.account-card input{width:100%;padding:11px 13px;border:1.5px solid #dce5eb;border-radius:10px;background:#f8fafc;color:#334155;font:inherit}.admin-toolbar input:focus,.admin-toolbar select:focus,.account-card input:focus{outline:none;border-color:#14b8a6;box-shadow:0 0 0 3px rgba(20,184,166,.13)}
+    .export-btn{border:0;border-radius:10px;padding:10px 16px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-weight:800;cursor:pointer;white-space:nowrap}.filter-summary{margin:-4px 0 15px;color:#64748b;font-size:.84rem}
+    .analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}.analytics-card{background:#fff;padding:18px;border-radius:18px;box-shadow:0 4px 20px rgba(15,23,42,.07)}.analytics-card h3{margin:0 0 4px;color:#134e4a}.analytics-card>p{margin:0 0 15px;color:#7b8794;font-size:.82rem}#adminMap{height:280px;border-radius:12px;overflow:hidden}
+    .trend-chart{height:280px;display:flex;align-items:flex-end;gap:9px;padding:20px 5px 28px;border-bottom:1px solid #dce5eb}.trend-bar-wrap{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative;min-width:0}.trend-value{margin-bottom:5px;color:#0f766e;font-size:.75rem;font-weight:800}.trend-bar{width:min(38px,70%);min-height:3px;border-radius:8px 8px 2px 2px;background:linear-gradient(180deg,#2dd4bf,#0f766e);transition:height .35s ease}.trend-label{position:absolute;top:calc(100% + 7px);color:#64748b;font-size:.62rem;white-space:nowrap}
+    .report-item{cursor:pointer}.report-item.map-selected{outline:3px solid #14b8a6;outline-offset:3px;box-shadow:0 18px 45px rgba(20,184,166,.28)}.focus-hint{display:inline-flex;margin-top:8px;color:#0f766e;font-size:.75rem;font-weight:700}.new-report-badge{display:inline-flex;align-items:center;gap:6px;margin-right:10px;padding:7px 11px;border-radius:999px;background:#fee2e2;color:#b91c1c;font-size:.78rem;font-weight:800}.new-report-badge[hidden]{display:none}.header-actions{display:flex;align-items:center}
+    .account-history-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}.account-card,.history-card{background:#fff;padding:20px;border-radius:18px;box-shadow:0 4px 20px rgba(15,23,42,.07)}.account-card h3,.history-card h3{color:#134e4a;margin:0 0 14px}.account-tabs{display:flex;gap:8px;margin-bottom:13px}.account-tabs button{flex:1;border:1px solid #dce5eb;border-radius:9px;padding:8px;background:#f8fafc;font-weight:700;cursor:pointer}.account-tabs button.active{background:#ccfbf1;color:#0f766e;border-color:#5eead4}.account-form{display:grid;gap:10px}.account-form button{padding:11px;border:0;border-radius:10px;background:#0d9488;color:#fff;font-weight:800;cursor:pointer}.history-list{max-height:300px;overflow:auto;display:grid;gap:8px}.history-item{padding:10px 12px;border-radius:10px;background:#f8fafc;border-left:3px solid #14b8a6;font-size:.8rem;color:#56616f}.history-item strong{color:#243447}
+    .delete-modal[hidden]{display:none}.delete-modal{position:fixed;inset:0;z-index:4000;display:grid;place-items:center;padding:18px;background:rgba(15,23,42,.62);backdrop-filter:blur(4px)}.delete-modal-card{width:min(410px,100%);padding:28px;text-align:center;background:#fff;border-radius:20px;box-shadow:0 25px 70px rgba(0,0,0,.3)}.delete-modal-icon{width:62px;height:62px;display:grid;place-items:center;margin:0 auto 14px;border-radius:50%;background:#fee2e2;color:#dc2626;font-size:1.8rem}.delete-modal-card h3{margin:0 0 8px;color:#7f1d1d}.delete-modal-card p{color:#64748b;line-height:1.5}.delete-modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}.delete-modal-actions button{padding:11px;border:0;border-radius:10px;font-weight:800;cursor:pointer}#cancelDeleteBtn{background:#e2e8f0;color:#334155}#confirmDeleteBtn{background:#dc2626;color:#fff}
+    @media(max-width:900px){.admin-toolbar{grid-template-columns:1fr 1fr}.analytics-grid,.account-history-grid{grid-template-columns:1fr}}@media(max-width:560px){.admin-toolbar{grid-template-columns:1fr}.header-actions{width:100%;justify-content:space-between}.analytics-card{padding:14px}.trend-chart{gap:3px}.trend-label{font-size:.55rem}}
+    .theme-toggle{margin-right:9px;padding:8px 11px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#334155;font-weight:800;cursor:pointer}.pagination{display:flex;justify-content:center;align-items:center;gap:7px;margin:22px 0}.pagination[hidden]{display:none}.pagination button{min-width:38px;padding:9px 11px;border:1px solid #d7e1e8;border-radius:9px;background:#fff;color:#475569;font-weight:750;cursor:pointer}.pagination button.active{border-color:#0d9488;background:#0d9488;color:#fff}.pagination button:disabled{opacity:.4;cursor:not-allowed}.pagination-info{color:#64748b;font-size:.8rem;margin:0 5px}.btn-print{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;box-shadow:0 4px 14px rgba(79,70,229,.25)}
+    body.admin-dark #adminApp:has(#dashboard:not(.hidden)){background:#07111e}body.admin-dark .dashboard-content{background:linear-gradient(180deg,#0b1727,#0a1320)}body.admin-dark .dashboard-header,body.admin-dark .analytics-card,body.admin-dark .admin-toolbar,body.admin-dark .report-item,body.admin-dark .account-card,body.admin-dark .history-card{background:#111f30;color:#dbeafe;border-color:#26384d}body.admin-dark .dashboard-header::before{background:linear-gradient(135deg,#10263a,#132f43,#111f30)}body.admin-dark .dashboard-header p,body.admin-dark .analytics-card>p,body.admin-dark .filter-summary,body.admin-dark .report-item p{color:#9fb0c5}body.admin-dark .analytics-card h3,body.admin-dark .account-card h3,body.admin-dark .history-card h3,body.admin-dark .dashboard-section h2,body.admin-dark .report-item h3{color:#79e2d3}body.admin-dark .admin-toolbar input,body.admin-dark .admin-toolbar select,body.admin-dark .account-card input,body.admin-dark .status-select-admin,body.admin-dark .pagination button,body.admin-dark .theme-toggle{background:#0b1727;color:#dbeafe;border-color:#31445b}body.admin-dark .history-item,body.admin-dark .empty-state{background:#0b1727;color:#aab8ca}body.admin-dark .report-item p strong{color:#d5e2f2}
+    .print-report-sheet{display:none}@media print{body.print-single-report>*:not(.print-report-sheet){display:none!important}body.print-single-report .print-report-sheet{display:block!important;padding:18mm;color:#1f2937;background:#fff;font-family:Arial,sans-serif}.print-report-header{display:flex;justify-content:space-between;align-items:start;padding-bottom:14px;border-bottom:3px solid #176b3a}.print-report-header h1{margin:0;color:#176b3a;font-size:22pt}.print-report-sheet h2{margin:22px 0 6px;font-size:17pt}.print-report-meta{width:100%;border-collapse:collapse;margin-top:18px}.print-report-meta th,.print-report-meta td{padding:9px;border:1px solid #d1d5db;text-align:left;vertical-align:top}.print-report-meta th{width:30%;background:#eef7f0}.print-report-photo{display:block;max-width:100%;max-height:110mm;margin:18px auto;border-radius:6px}.print-report-footer{margin-top:25px;padding-top:10px;border-top:1px solid #9ca3af;font-size:9pt;color:#6b7280}@page{size:A4;margin:0}}
   </style>
 </head>
 <body>
@@ -989,7 +1002,7 @@
       <div class="dashboard-sidebar">
         <h2>🗑️ Sampah App</h2>
         <nav class="sidebar-nav">
-          <a class="sidebar-nav-item active" href="#">
+          <a class="sidebar-nav-item active" href="#reportsSection">
             <span>📋</span> Laporan Sampah
           </a>
           <a class="sidebar-nav-item" href="/" target="_blank">
@@ -998,6 +1011,7 @@
           <a class="sidebar-nav-item" href="/" target="_blank">
             <span>♻️</span> Daur Ulang
           </a>
+          <a class="sidebar-nav-item" href="#accountSection"><span>⚙</span> Akun Admin</a>
         </nav>
         <div id="sidebarStats"></div>
         <div class="sidebar-footer">
@@ -1011,26 +1025,50 @@
             <h1>♻️ Admin Dashboard</h1>
               <p style="margin:2px 0 0;color:#888;font-size:0.85rem;">🗑️ Kelola laporan sampah desa</p>
           </div>
-          <button id="logoutBtn" class="logout-btn">🚪 Logout</button>
+          <div class="header-actions"><span id="newReportBadge" class="new-report-badge" hidden>0 laporan baru</span><button id="themeToggle" class="theme-toggle" type="button">🌙 Gelap</button><button id="logoutBtn" class="logout-btn">🚪 Logout</button></div>
         </div>
 
         <div class="dashboard-content">
           <div id="dashboardStats" class="dashboard-stats-bar"></div>
-          <div class="dashboard-section">
+          <div class="analytics-grid">
+            <section class="analytics-card"><h3>Tren laporan 7 hari</h3><p>Pola laporan warga yang masuk setiap hari.</p><div id="adminTrendChart" class="trend-chart"></div></section>
+            <section class="analytics-card"><h3>Peta prioritas</h3><p>Klik kartu laporan untuk memperbesar titiknya.</p><div id="adminMap"></div></section>
+          </div>
+          <div class="dashboard-section" id="reportsSection">
             <div class="section-header">
               <h2>🗑️ Laporan Sampah Terbaru</h2>
               <button class="refresh-btn" onclick="loadReports()" title="Refresh data">🔄</button>
             </div>
+            <div class="admin-toolbar">
+              <input type="search" id="reportSearch" placeholder="Cari nama, deskripsi, lokasi, atau nomor WA..." />
+              <select id="statusFilter"><option value="all">Semua status</option><option>Belum Ditangani</option><option>Sedang Ditindaklanjuti</option><option>Selesai Ditangani</option></select>
+              <select id="typeFilter"><option value="all">Semua tipe</option><option value="Warga">Laporan Warga</option><option value="TPS">TPS / Bank Sampah</option></select>
+              <button type="button" id="exportCsvBtn" class="export-btn">⬇ Export CSV</button>
+            </div>
+            <p class="filter-summary" id="filterSummary">Memuat data...</p>
             <div id="reportsList" class="reports-list">
               <div class="empty-state">♻️ Memuat data laporan sampah...</div>
             </div>
+          </div>
+            <nav id="reportPagination" class="pagination" aria-label="Halaman laporan" hidden></nav>
+          <div class="account-history-grid" id="accountSection">
+            <section class="account-card">
+              <h3>Pengaturan akun admin</h3>
+              <div class="account-tabs"><button type="button" class="active" data-account-tab="password">Ganti password</button><button type="button" data-account-tab="new-admin">Tambah admin</button></div>
+              <form id="changePasswordForm" class="account-form"><input type="password" id="currentPassword" placeholder="Password saat ini" required><input type="password" id="newPassword" placeholder="Password baru (minimal 8 karakter)" required minlength="8"><button type="submit">Simpan password baru</button></form>
+              <form id="newAdminForm" class="account-form hidden"><input type="text" id="newAdminName" placeholder="Nama admin / perangkat desa" required><input type="text" id="newAdminUsername" placeholder="Username baru" required><input type="password" id="newAdminPassword" placeholder="Password minimal 8 karakter" required minlength="8"><button type="submit">Tambahkan admin</button></form>
+            </section>
+            <section class="history-card"><h3>Riwayat perubahan status</h3><div id="statusHistory" class="history-list"><div class="empty-state">Memuat riwayat...</div></div></section>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
+  <div id="deleteModal" class="delete-modal" hidden><div class="delete-modal-card" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle"><div class="delete-modal-icon">!</div><h3 id="deleteModalTitle">Hapus laporan ini?</h3><p id="deleteModalText">Laporan akan disembunyikan dari dashboard dan peta.</p><div class="delete-modal-actions"><button type="button" id="cancelDeleteBtn">Batal</button><button type="button" id="confirmDeleteBtn">Ya, hapus</button></div></div></div>
+
+  <section id="printReportSheet" class="print-report-sheet" aria-hidden="true"></section>
+  <script type="application/disabled">
     const ADMIN_STATE = {
       authenticated: false,
       enabled: false,
@@ -1321,5 +1359,7 @@
     // Check session on load
     fetchAdminSession();
   </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>
