@@ -28,12 +28,93 @@ function showNotification(message, type = "success", duration = 3000) {
   }, duration);
 }
 
+function showReportSuccessModal() {
+  const modal = document.getElementById("reportSuccessModal");
+  const closeButton = document.getElementById("closeSuccessModal");
+  if (!modal) return;
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  requestAnimationFrame(() => modal.classList.add("is-visible"));
+  setTimeout(() => closeButton?.focus(), 250);
+}
+
+function closeReportSuccessModal() {
+  const modal = document.getElementById("reportSuccessModal");
+  if (!modal || modal.hidden) return;
+  modal.classList.remove("is-visible");
+  document.body.classList.remove("modal-open");
+  setTimeout(() => { modal.hidden = true; }, 220);
+}
+
+function bindReportSuccessModal() {
+  const modal = document.getElementById("reportSuccessModal");
+  modal?.querySelectorAll("[data-close-success]").forEach((element) => {
+    element.addEventListener("click", closeReportSuccessModal);
+  });
+  document.getElementById("closeSuccessModal")?.addEventListener("click", closeReportSuccessModal);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && modal && !modal.hidden) closeReportSuccessModal();
+  });
+}
+
 function animateElement(element, animation = "pulse") {
   if (!element) return;
   element.style.animation = `${animation} 0.6s ease-out`;
   setTimeout(() => {
     element.style.animation = "";
   }, 600);
+}
+
+const MAX_IMAGE_INPUT_BYTES = 15 * 1024 * 1024;
+const IMAGE_COMPRESSION_THRESHOLD = 900 * 1024;
+const IMAGE_MAX_DIMENSION = 1600;
+
+function loadImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("FORMAT_FOTO_TIDAK_DIDUKUNG"));
+    };
+    image.src = objectUrl;
+  });
+}
+
+async function preparePhotoForUpload(file) {
+  if (!file) return null;
+  if (!file.type.startsWith("image/")) throw new Error("FILE_BUKAN_GAMBAR");
+  if (file.size > MAX_IMAGE_INPUT_BYTES) throw new Error("FOTO_TERLALU_BESAR");
+  if (file.size <= IMAGE_COMPRESSION_THRESHOLD) return file;
+
+  const image = await loadImageFile(file);
+  const scale = Math.min(1, IMAGE_MAX_DIMENSION / Math.max(image.naturalWidth, image.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const context = canvas.getContext("2d", { alpha: false });
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.76));
+  if (!blob) throw new Error("KOMPRESI_FOTO_GAGAL");
+  const baseName = (file.name || "foto-sampah").replace(/\.[^.]+$/, "");
+  return new File([blob], `${baseName}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
+}
+
+function getPhotoErrorMessage(error) {
+  const messages = {
+    FILE_BUKAN_GAMBAR: "File yang dipilih bukan gambar.",
+    FOTO_TERLALU_BESAR: "Foto terlalu besar. Pilih foto berukuran maksimal 15 MB.",
+    FORMAT_FOTO_TIDAK_DIDUKUNG: "Format foto tidak didukung. Gunakan JPG, PNG, atau WebP.",
+    KOMPRESI_FOTO_GAGAL: "Foto gagal diproses. Coba gunakan foto lain atau ambil ulang.",
+  };
+  return messages[error?.message] || "Foto gagal diproses. Coba gunakan foto lain.";
 }
 
 function addRippleEffect(event) {
@@ -712,21 +793,40 @@ function bindReportForm() {
     formData.append("accuracy", document.getElementById("locationAccuracy").value.trim());
     const fotoInput = document.getElementById("foto");
     if (fotoInput.files[0]) {
-      formData.append("foto", fotoInput.files[0]);
+      try {
+        showFormMessage("Mengoptimalkan foto sebelum dikirim...");
+        const optimizedPhoto = await preparePhotoForUpload(fotoInput.files[0]);
+        formData.append("foto", optimizedPhoto, optimizedPhoto.name);
+      } catch (photoError) {
+        showFormMessage(getPhotoErrorMessage(photoError), true);
+        return;
+      }
     }
 
     try {
+      showFormMessage("Mengirim laporan, mohon tunggu...");
       const res = await fetch("/api/reports", {
         method: "POST",
         body: formData,
       });
-      const json = await res.json();
+      const responseText = await res.text();
+      let json;
+      try {
+        json = JSON.parse(responseText);
+      } catch (_) {
+        const uploadTooLarge = res.status === 413 || /too large|payload/i.test(responseText);
+        showFormMessage(uploadTooLarge
+          ? "Ukuran foto masih terlalu besar untuk dikirim. Coba pilih foto lain."
+          : "Server tidak dapat menerima foto saat ini. Coba lagi beberapa saat.", true);
+        return;
+      }
       if (!res.ok || !json.ok) {
         showFormMessage(json.message || "Gagal mengirim laporan.", true);
         return;
       }
 
       showFormMessage("Laporan berhasil dikirim.");
+      showReportSuccessModal();
       form.reset();
       document.getElementById("locationConfirmation").hidden = true;
       clearReporterLocationPreview();
@@ -749,6 +849,122 @@ function renderStats(reports) {
   document.getElementById("statSelesai").textContent = reports.filter(
     (r) => r.status === "Selesai Ditangani"
   ).length;
+}
+
+function parseReportDate(value) {
+  if (!value) return null;
+  const direct = new Date(value);
+  if (!Number.isNaN(direct.getTime())) return direct;
+
+  const match = String(value).match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\D+(\d{1,2})[.:](\d{2})(?:[.:](\d{2}))?)?/);
+  if (!match) return null;
+  const parsed = new Date(
+    Number(match[3]), Number(match[2]) - 1, Number(match[1]),
+    Number(match[4] || 0), Number(match[5] || 0), Number(match[6] || 0)
+  );
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function startOfWeek(date) {
+  const result = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const day = result.getDay() || 7;
+  result.setDate(result.getDate() - day + 1);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+function buildWeeklyReportData(reports) {
+  const currentWeek = startOfWeek(new Date());
+  const weeks = Array.from({ length: 6 }, (_, index) => {
+    const start = new Date(currentWeek);
+    start.setDate(start.getDate() - (5 - index) * 7);
+    return { start, count: 0 };
+  });
+
+  reports.forEach((report) => {
+    const reportDate = parseReportDate(report.timestamp);
+    if (!reportDate) return;
+    const reportWeek = startOfWeek(reportDate).getTime();
+    const bucket = weeks.find((week) => week.start.getTime() === reportWeek);
+    if (bucket) bucket.count += 1;
+  });
+  return weeks;
+}
+
+function renderWeeklyChart(reports) {
+  const canvas = document.getElementById("weeklyReportChart");
+  if (!canvas) return;
+  const weeks = buildWeeklyReportData(reports);
+  const total = weeks.reduce((sum, week) => sum + week.count, 0);
+  document.getElementById("weeklyTotal").textContent = total;
+  document.getElementById("chartEmpty").hidden = total !== 0;
+
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const width = Math.max(canvas.clientWidth, 300);
+  const height = Math.max(canvas.clientHeight, 220);
+  canvas.width = Math.round(width * ratio);
+  canvas.height = Math.round(height * ratio);
+  const context = canvas.getContext("2d");
+  context.scale(ratio, ratio);
+  context.clearRect(0, 0, width, height);
+
+  const margin = { top: 18, right: 16, bottom: 44, left: 38 };
+  const chartWidth = width - margin.left - margin.right;
+  const chartHeight = height - margin.top - margin.bottom;
+  const maxValue = Math.max(4, ...weeks.map((week) => week.count));
+  const gridStep = Math.max(1, Math.ceil(maxValue / 4));
+  const gridMax = Math.ceil(maxValue / gridStep) * gridStep;
+
+  context.font = "12px Segoe UI, sans-serif";
+  context.textBaseline = "middle";
+  for (let value = 0; value <= gridMax; value += gridStep) {
+    const y = margin.top + chartHeight - (value / gridMax) * chartHeight;
+    context.strokeStyle = "#e5eee8";
+    context.lineWidth = 1;
+    context.beginPath(); context.moveTo(margin.left, y); context.lineTo(width - margin.right, y); context.stroke();
+    context.fillStyle = "#7b8980";
+    context.textAlign = "right";
+    context.fillText(String(value), margin.left - 10, y);
+  }
+
+  const slotWidth = chartWidth / weeks.length;
+  const barWidth = Math.min(58, slotWidth * .54);
+  weeks.forEach((week, index) => {
+    const barHeight = (week.count / gridMax) * chartHeight;
+    const x = margin.left + index * slotWidth + (slotWidth - barWidth) / 2;
+    const y = margin.top + chartHeight - barHeight;
+    const gradient = context.createLinearGradient(0, y, 0, margin.top + chartHeight);
+    gradient.addColorStop(0, "#39a45d"); gradient.addColorStop(1, "#1f5f2b");
+    context.fillStyle = gradient;
+    context.beginPath();
+    if (context.roundRect) context.roundRect(x, y, barWidth, Math.max(barHeight, 2), [7, 7, 2, 2]);
+    else context.rect(x, y, barWidth, Math.max(barHeight, 2));
+    context.fill();
+
+    if (week.count > 0) {
+      context.fillStyle = "#245b33"; context.font = "700 12px Segoe UI, sans-serif"; context.textAlign = "center";
+      context.fillText(String(week.count), x + barWidth / 2, y - 10);
+    }
+    context.fillStyle = "#66736a"; context.font = "11px Segoe UI, sans-serif"; context.textAlign = "center";
+    context.fillText(week.start.toLocaleDateString("id-ID", { day: "numeric", month: "short" }), x + barWidth / 2, height - 19);
+  });
+}
+
+function initCampaignPoster() {
+  const qrContainer = document.getElementById("campaignQr");
+  if (!qrContainer) return;
+  const campaignUrl = `${window.location.origin}${window.location.pathname}`;
+  document.getElementById("campaignUrl").textContent = campaignUrl;
+  if (window.QRCode) {
+    new QRCode(qrContainer, { text: campaignUrl, width: 240, height: 240, colorDark: "#123d24", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+  } else {
+    qrContainer.textContent = "QR tidak dapat dimuat";
+  }
+  document.getElementById("printPosterBtn").addEventListener("click", () => {
+    document.body.classList.add("printing-poster");
+    window.print();
+  });
+  window.addEventListener("afterprint", () => document.body.classList.remove("printing-poster"));
 }
 
 function resolvePhotoUrl(photoRef) {
@@ -894,6 +1110,7 @@ async function loadReports() {
     // For markers and stats, show both
     const allData = [...allReports, ...allTps];
     renderStats(allReports);
+    renderWeeklyChart(allReports);
     renderReportList();  // Filtered based on currentReportFilter
     renderMarkers(allData);
   } catch (err) {
@@ -904,6 +1121,8 @@ async function loadReports() {
 }
 
 initMap();
+initCampaignPoster();
+bindReportSuccessModal();
 bindTabButtons();
 bindReportForm();
 bindAddTpsForm();
@@ -911,3 +1130,4 @@ bindAdminPanel();
 fetchAdminSession();
 loadReports();
 setInterval(loadReports, 15000);
+window.addEventListener("resize", () => renderWeeklyChart(allReports));
