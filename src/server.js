@@ -179,7 +179,9 @@ function getLocalIp() {
   return "127.0.0.1";
 }
 
-const storage = USE_CLOUDINARY
+// Cloud/serverless filesystem tidak permanen dan umumnya tidak dapat ditulis.
+// Simpan upload di memori sampai diteruskan ke penyimpanan eksternal.
+const storage = (USE_CLOUDINARY || IS_CLOUD_ENV)
   ? multer.memoryStorage()
   : multer.diskStorage({
       destination: (req, file, cb) => cb(null, UPLOAD_DIR),
@@ -189,7 +191,16 @@ const storage = USE_CLOUDINARY
       },
     });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!String(file.mimetype || "").startsWith("image/")) {
+      return cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", "foto"));
+    }
+    return cb(null, true);
+  },
+});
 
 function uploadToCloudinary(file) {
   return new Promise((resolve, reject) => {
@@ -309,6 +320,12 @@ app.post("/api/reports", upload.single("foto"), async (req, res) => {
 
     let fotoReference;
     if (req.file) {
+      if (IS_CLOUD_ENV && !USE_CLOUDINARY) {
+        return res.status(503).json({
+          ok: false,
+          message: "Penyimpanan foto belum dikonfigurasi di server.",
+        });
+      }
       fotoReference = USE_CLOUDINARY ? await uploadToCloudinary(req.file) : req.file.filename;
     }
 
@@ -368,6 +385,12 @@ app.post("/api/tps", upload.single("foto"), async (req, res) => {
 
     let fotoReference;
     if (req.file) {
+      if (IS_CLOUD_ENV && !USE_CLOUDINARY) {
+        return res.status(503).json({
+          ok: false,
+          message: "Penyimpanan foto belum dikonfigurasi di server.",
+        });
+      }
       fotoReference = USE_CLOUDINARY ? await uploadToCloudinary(req.file) : req.file.filename;
     }
 
@@ -385,6 +408,14 @@ app.post("/api/tps", upload.single("foto"), async (req, res) => {
     console.error(err);
     res.status(500).json({ ok: false, message: "Gagal menambahkan TPS." });
   }
+});
+
+app.use((err, req, res, next) => {
+  if (!(err instanceof multer.MulterError)) return next(err);
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(413).json({ ok: false, message: "Ukuran foto terlalu besar. Maksimal 3 MB setelah dikompresi." });
+  }
+  return res.status(400).json({ ok: false, message: "File foto tidak valid. Gunakan JPG, PNG, atau WebP." });
 });
 
 function ensureHttpsCertificate() {
