@@ -28,7 +28,14 @@
     </div>
   </header>
 
-  <main>
+  <nav class="page-nav" aria-label="Navigasi utama">
+    <a href="#peta">Peta &amp; Laporan</a>
+    <a href="#edukasi">Edukasi Sampah</a>
+    <a href="#statistik">Statistik</a>
+    <a href="#kampanye">Poster Kampanye</a>
+  </nav>
+
+  <main id="peta">
     <div id="map"></div>
     <aside id="sidebar">
       <!-- Tab Buttons untuk switch antara form TPS dan Laporan -->
@@ -140,7 +147,112 @@
     </aside>
   </main>
 
+  <section class="content-section education-section" id="edukasi">
+    <div class="section-intro">
+      <span class="eyebrow">Belajar sebelum membuang</span>
+      <h2>Kenali sampah, kurangi dari rumah</h2>
+      <p>Pengelolaan sampah dimulai dari keputusan kecil: memilah, mengurangi, dan memastikan sampah tiba di tempat yang tepat.</p>
+    </div>
+    <div class="education-grid">
+      <article class="education-card education-card--organic">
+        <span class="education-icon" aria-hidden="true">&#127793;</span>
+        <h3>Organik</h3>
+        <p>Sisa makanan, daun, dan bahan alami yang mudah terurai. Pisahkan untuk dijadikan kompos.</p>
+        <span class="education-tag">Mudah terurai</span>
+      </article>
+      <article class="education-card education-card--recycle">
+        <span class="education-icon" aria-hidden="true">&#9851;</span>
+        <h3>Anorganik</h3>
+        <p>Plastik, botol, kaleng, dan kardus. Bersihkan dan kumpulkan untuk bank sampah atau daur ulang.</p>
+        <span class="education-tag">Bisa bernilai</span>
+      </article>
+      <article class="education-card education-card--hazard">
+        <span class="education-icon" aria-hidden="true">&#9888;</span>
+        <h3>B3 &amp; residu</h3>
+        <p>Baterai, lampu, popok, dan limbah berbahaya perlu wadah terpisah agar tidak mencemari tanah dan air.</p>
+        <span class="education-tag">Tangani khusus</span>
+      </article>
+    </div>
+    <div class="three-r-panel">
+      <div>
+        <span class="eyebrow">Prinsip 3R</span>
+        <h3>Kurangi sampah dari sumbernya</h3>
+      </div>
+      <ol class="three-r-list">
+        <li><strong>Reduce</strong><span>Kurangi barang sekali pakai dan belanja seperlunya.</span></li>
+        <li><strong>Reuse</strong><span>Gunakan kembali tas, botol, wadah, dan barang layak pakai.</span></li>
+        <li><strong>Recycle</strong><span>Pilah material agar dapat diolah menjadi produk baru.</span></li>
+      </ol>
+    </div>
+    <div class="overload-warning">
+      <span class="warning-mark" aria-hidden="true">!</span>
+      <div>
+        <h3>Mengapa TPS overload berbahaya?</h3>
+        <p>Tumpukan berlebih menimbulkan bau dan lindi, mengundang lalat serta tikus, menyumbat drainase, meningkatkan risiko penyakit, dan dapat mencemari tanah maupun air. Laporkan lebih awal sebelum kondisi memburuk.</p>
+      </div>
+      <a href="#peta" class="section-cta">Laporkan kondisi TPS</a>
+    </div>
+  </section>
+
+  <section class="content-section stats-section" id="statistik">
+    <div class="section-intro section-intro--row">
+      <div>
+        <span class="eyebrow">Monitoring warga</span>
+        <h2>Tren laporan 6 minggu terakhir</h2>
+        <p>Grafik diperbarui otomatis dari laporan yang masuk.</p>
+      </div>
+      <div class="chart-summary"><strong id="weeklyTotal">0</strong><span>laporan dalam 6 minggu</span></div>
+    </div>
+    <div class="chart-card">
+      <canvas id="weeklyReportChart" height="260" aria-label="Grafik batang laporan per minggu" role="img"></canvas>
+      <div class="chart-empty" id="chartEmpty" hidden>Belum ada laporan bertanggal dalam 6 minggu terakhir.</div>
+    </div>
+  </section>
+
+  <section class="content-section campaign-section" id="kampanye">
+    <div class="section-intro">
+      <span class="eyebrow">Dari poster ke aksi digital</span>
+      <h2>Kampanye lingkungan yang bisa dibawa ke lapangan</h2>
+      <p>Cetak poster ini dan tempelkan di titik TPS, balai desa, sekolah, atau ruang publik agar warga dapat memindai dan melapor langsung.</p>
+    </div>
+    <div class="campaign-layout">
+      <div class="poster" id="campaignPoster">
+        <div class="poster-topline">GERAKAN DESA BERSIH</div>
+        <div class="poster-symbol" aria-hidden="true">&#9851;</div>
+        <h2>Sampah terlihat?<br><span>Jangan dibiarkan.</span></h2>
+        <p>Laporkan titik sampah dan kondisi TPS melalui Peta Titik TPS.</p>
+        <div class="poster-steps"><span>1. Pindai QR</span><span>2. Pilih lokasi</span><span>3. Kirim laporan</span></div>
+        <div class="poster-qr-row">
+          <div id="campaignQr" class="poster-qr" aria-label="QR code menuju website"></div>
+          <div><strong>SCAN<br>DI SINI</strong><small id="campaignUrl"></small></div>
+        </div>
+        <div class="poster-footer">Pilah sampah &bull; Terapkan 3R &bull; Jaga lingkungan</div>
+      </div>
+      <div class="campaign-actions">
+        <h3>Poster siap cetak</h3>
+        <p>Ukuran dirancang proporsional untuk kertas A4. QR code otomatis menggunakan alamat website ini.</p>
+        <button type="button" id="printPosterBtn" class="print-poster-btn">Cetak / Simpan sebagai PDF</button>
+        <small>Untuk hasil terbaik, aktifkan opsi “background graphics” pada dialog cetak.</small>
+      </div>
+    </div>
+  </section>
+
+  <div class="success-modal" id="reportSuccessModal" hidden>
+    <div class="success-modal__backdrop" data-close-success></div>
+    <div class="success-modal__card" role="dialog" aria-modal="true" aria-labelledby="successModalTitle" aria-describedby="successModalDescription">
+      <div class="success-modal__icon" aria-hidden="true">
+        <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"></circle><path d="M15 27l7 7 15-16"></path></svg>
+      </div>
+      <span class="success-modal__eyebrow">Laporan diterima</span>
+      <h2 id="successModalTitle">Terima kasih sudah peduli!</h2>
+      <p id="successModalDescription">Laporan berhasil terkirim dan sudah masuk ke daftar monitoring. Petugas dapat melihat lokasi serta detail yang Anda berikan.</p>
+      <div class="success-modal__status"><span></span> Status awal: <strong>Belum Ditangani</strong></div>
+      <button type="button" id="closeSuccessModal">Kembali ke peta</button>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
