@@ -15,7 +15,10 @@ const { v2: cloudinary } = require("cloudinary");
 const selfsigned = require("selfsigned");
 require("dotenv").config();
 
-const { getAllReports, updateStatus, ensureHeader, appendReport, deleteReport, appendTps, getAllTps } = require("./sheets");
+const {
+  getAllReports, updateStatus, ensureHeader, appendReport, deleteReport, appendTps, getAllTps,
+  getReportByRowNumber, appendStatusHistory, getStatusHistory, getAdminUser, upsertAdminUser,
+} = require("./sheets");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -76,19 +79,36 @@ function parseCookies(cookieHeader = "") {
 }
 
 function createAdminSessionToken(username) {
-  if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) return "";
-
-  return crypto
-    .createHmac("sha256", ADMIN_SESSION_SECRET)
-    .update(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`)
-    .digest("hex");
+  if (!username || !ADMIN_SESSION_SECRET) return "";
+  const normalizedUsername = String(username).trim().toLowerCase();
+  const signature = crypto.createHmac("sha256", ADMIN_SESSION_SECRET).update(normalizedUsername).digest("hex");
+  return `${encodeURIComponent(normalizedUsername)}.${signature}`;
 }
 
-function isAdminAuthenticated(req) {
-  if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) return false;
-
+function getAuthenticatedAdmin(req) {
+  if (!ADMIN_SESSION_SECRET) return null;
   const cookies = parseCookies(req.headers.cookie || "");
-  return cookies.admin_session === createAdminSessionToken(ADMIN_USERNAME);
+  const token = cookies.admin_session || "";
+  const separator = token.lastIndexOf(".");
+  if (separator < 1) return null;
+  const username = decodeURIComponent(token.slice(0, separator));
+  const expected = createAdminSessionToken(username);
+  if (token.length !== expected.length) return null;
+  return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected)) ? username : null;
+}
+
+function hashAdminPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${hash}`;
+}
+
+function verifyAdminPassword(password, storedHash) {
+  const [salt, hash] = String(storedHash || "").split(":");
+  if (!salt || !hash) return false;
+  const candidate = crypto.scryptSync(password, salt, 64);
+  const expected = Buffer.from(hash, "hex");
+  return candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
 }
 
 function getClientIp(req) {
@@ -156,14 +176,14 @@ function clearAdminSessionCookie(res) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
+  if (!ADMIN_SESSION_SECRET) {
     return res.status(503).json({ ok: false, message: "Akses admin belum dikonfigurasi di server." });
   }
-
-  if (!isAdminAuthenticated(req)) {
+  const username = getAuthenticatedAdmin(req);
+  if (!username) {
     return res.status(403).json({ ok: false, message: "Hanya admin yang dapat mengelola laporan." });
   }
-
+  req.adminUsername = username;
   return next();
 }
 
@@ -231,14 +251,15 @@ app.get("/admin", (req, res) => {
 });
 
 app.get("/api/admin/session", (req, res) => {
-  const enabled = Boolean(ADMIN_USERNAME && ADMIN_PASSWORD && ADMIN_SESSION_SECRET);
-  res.json({ ok: true, enabled, authenticated: enabled ? isAdminAuthenticated(req) : false });
+  const username = getAuthenticatedAdmin(req);
+  const enabled = Boolean(ADMIN_SESSION_SECRET && (ADMIN_USERNAME || username));
+  res.json({ ok: true, enabled, authenticated: Boolean(username), username });
 });
 
-app.post("/api/admin/login", (req, res) => {
+app.post("/api/admin/login", async (req, res) => {
   const clientIp = getClientIp(req);
   
-  if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_SESSION_SECRET) {
+  if (!ADMIN_SESSION_SECRET) {
     return res.status(503).json({ ok: false, message: "Akses admin belum dikonfigurasi di server." });
   }
 
@@ -249,7 +270,15 @@ app.post("/api/admin/login", (req, res) => {
   const username = String(req.body?.username || "").trim();
   const password = String(req.body?.password || "");
   
-  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+  let validCredentials = username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+  try {
+    const storedAdmin = await getAdminUser(username);
+    if (storedAdmin) validCredentials = storedAdmin.active && verifyAdminPassword(password, storedAdmin.passwordHash);
+  } catch (err) {
+    console.warn("[server] Gagal membaca akun admin dari Sheets, memakai akun environment:", err.message);
+  }
+
+  if (!validCredentials) {
     recordLoginAttempt(clientIp, false);
     const attempt = ADMIN_LOGIN_ATTEMPTS[clientIp];
     return res.status(401).json({ ok: false, message: `Username atau password salah. (Percobaan: ${attempt.count}/${MAX_LOGIN_ATTEMPTS})` });
@@ -263,6 +292,48 @@ app.post("/api/admin/login", (req, res) => {
 app.post("/api/admin/logout", (req, res) => {
   clearAdminSessionCookie(res);
   res.json({ ok: true, message: "Logout admin berhasil." });
+});
+
+app.post("/api/admin/change-password", requireAdmin, async (req, res) => {
+  try {
+    const currentPassword = String(req.body?.currentPassword || "");
+    const newPassword = String(req.body?.newPassword || "");
+    if (newPassword.length < 8) return res.status(400).json({ ok: false, message: "Password baru minimal 8 karakter." });
+    const storedAdmin = await getAdminUser(req.adminUsername);
+    const currentValid = storedAdmin
+      ? verifyAdminPassword(currentPassword, storedAdmin.passwordHash)
+      : req.adminUsername === ADMIN_USERNAME.toLowerCase() && currentPassword === ADMIN_PASSWORD;
+    if (!currentValid) return res.status(401).json({ ok: false, message: "Password saat ini salah." });
+    await upsertAdminUser({ username: req.adminUsername, passwordHash: hashAdminPassword(newPassword), name: storedAdmin?.name || req.adminUsername });
+    res.json({ ok: true, message: "Password berhasil diganti." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, message: "Gagal mengganti password." });
+  }
+});
+
+app.post("/api/admin/users", requireAdmin, async (req, res) => {
+  try {
+    const username = String(req.body?.username || "").trim().toLowerCase();
+    const password = String(req.body?.password || "");
+    const name = String(req.body?.name || username).trim();
+    if (!/^[a-z0-9._-]{3,32}$/.test(username)) return res.status(400).json({ ok: false, message: "Username harus 3–32 karakter tanpa spasi." });
+    if (password.length < 8) return res.status(400).json({ ok: false, message: "Password minimal 8 karakter." });
+    await upsertAdminUser({ username, passwordHash: hashAdminPassword(password), name });
+    res.json({ ok: true, message: `Admin ${username} berhasil disimpan.` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, message: "Gagal menyimpan akun admin." });
+  }
+});
+
+app.get("/api/admin/status-history", requireAdmin, async (req, res) => {
+  try {
+    res.json({ ok: true, history: await getStatusHistory(100) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, message: "Gagal memuat riwayat status." });
+  }
 });
 
 // Ambil semua laporan untuk ditampilkan di peta
@@ -355,7 +426,10 @@ app.post("/api/reports/:rowNumber/status", requireAdmin, async (req, res) => {
     if (!allowed.includes(status)) {
       return res.status(400).json({ ok: false, message: "Status tidak valid." });
     }
-    await updateStatus(parseInt(rowNumber, 10), status);
+    const parsedRowNumber = parseInt(rowNumber, 10);
+    const current = await getReportByRowNumber(parsedRowNumber);
+    await updateStatus(parsedRowNumber, status);
+    await appendStatusHistory({ rowNumber: parsedRowNumber, reportName: current.nama, oldStatus: current.status, newStatus: status, changedBy: req.adminUsername });
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
